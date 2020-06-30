@@ -1,0 +1,3 @@
+graft cmsml
+include setup.py requirements.txt README.rst LICENSE .flake8
+global-exclude *.py[cod] __pycache__
