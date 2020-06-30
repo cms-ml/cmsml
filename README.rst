@@ -1,7 +1,12 @@
-Python Package of the CMS Machine Learning Group
-================================================
+.. figure:: https://raw.githubusercontent.com/cms-ml/cmsml/master/logo.png
+   :target: https://github.com/cms-ml/cmsml
+   :align: center
+   :alt: cmsml logo
 
 .. marker-after-logo
+
+
+Python Package of the CMS Machine Learning Group
 
 
 .. image:: https://img.shields.io/travis/cms-ml/cmsml/master.svg?style=flat
