@@ -1,12 +1,8 @@
 .. figure:: https://raw.githubusercontent.com/cms-ml/cmsml/master/logo.png
    :target: https://github.com/cms-ml/cmsml
-   :align: center
    :alt: cmsml logo
 
 .. marker-after-logo
-
-
-Python Package of the CMS Machine Learning Group
 
 
 .. image:: https://img.shields.io/travis/cms-ml/cmsml/master.svg?style=flat
@@ -25,10 +21,18 @@ Python Package of the CMS Machine Learning Group
    :target: https://github.com/cms-ml/cmsml/blob/master/LICENSE
    :alt: License
 
+.. marker-after-badges
+
+
+Python Package of the CMS Machine Learning Group
+
+.. marker-after-slogan
+
+
 .. marker-after-header
 
-
-Todo.
+.. note::
+   This project is under development. Click `here <https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&>`__ to submit a feature suggestion!
 
 
 Development
@@ -37,4 +41,4 @@ Development
 - Source hosted at `GitHub <https://github.com/cms-ml/cmsml>`__
 - Report issues, questions, feature requests on `GitHub Issues <https://github.com/cms-ml/cmsml/issues>`__
 
-.. marker-after-body
+.. marker-after-content

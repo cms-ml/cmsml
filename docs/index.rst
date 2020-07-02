@@ -8,4 +8,4 @@
 
 .. include:: ../README.rst
    :start-after: marker-after-header
-   :end-before: marker-after-body
+   :end-before: marker-after-content

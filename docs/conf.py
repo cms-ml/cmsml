@@ -33,7 +33,7 @@ pygments_style = "sphinx"
 add_module_names = False
 
 html_title = project + " Documentation"
-# html_logo = "../logo.png"
+html_logo = "../logo.png"
 html_sidebars = {"**": [
     "about.html",
     "localtoc.html",
