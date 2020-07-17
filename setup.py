@@ -40,6 +40,10 @@ with open(os.path.join(this_dir, "README.rst"), "r") as f:
 with open(os.path.join(this_dir, "requirements.txt"), "r") as f:
     install_requires = [line.strip() for line in f.readlines() if line.strip()]
 
+# load docs requirements
+with open(os.path.join(this_dir, "requirements_docs.txt"), "r") as f:
+    docs_requires = [line.strip() for line in f.readlines() if line.strip()]
+
 
 # load meta infos
 meta = {}
@@ -65,7 +69,7 @@ setup(
     install_requires=install_requires,
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4'",
     extras_require={
-        "docs": ["sphinx", "sphinx-rtd-theme", "autodocsumm"],
+        "docs": docs_requires,
     },
     zip_safe=False,
     packages=find_packages(exclude=["tests"]),
