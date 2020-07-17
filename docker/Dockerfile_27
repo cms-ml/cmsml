@@ -1,0 +1,26 @@
+FROM python:2.7
+
+# set the workdir
+WORKDIR /root
+
+# minimal software stack
+RUN apt-get update; apt-get clean
+RUN apt-get install -y nano less htop git; apt-get clean
+
+# update pip
+RUN pip install --upgrade pip
+
+# install base software
+RUN pip install ipython
+
+# python software stack
+Run pip install flake8
+RUN pip install numpy
+RUN pip install scipy
+RUN pip install matplotlib
+RUN pip install pandas
+RUN pip install numexpr
+RUN pip install scikit-learn
+RUN pip install scikit-optimize
+RUN pip install tensorflow
+RUN pip install xgboost

@@ -4,6 +4,9 @@ dist: xenial
 
 language: python
 
+services:
+  - docker
+
 stages:
   - lint
   - test
@@ -11,47 +14,37 @@ stages:
 jobs:
   include:
     - stage: lint
-      python: 3.8
       env:
         - JOB=lint
+        - IMAGE=cmsml/cmsml
       install:
-        - pip install -r requirements.txt
-        - pip install flake8
+        - docker pull $image
       script:
-        - flake8 cmsml setup.py
+        - docker run --rm -t -v `pwd`:/cmsml -w /cmsml $image bash -c "flake8 cmsml setup.py"
 
     - stage: test
-      python: 2.7
       env:
         - JOB=test_python27
+        - IMAGE=cmsml/cmsml:2.7
       install:
-        - pip install -r requirements.txt
+        - docker pull $image
       script:
-        - python -m unittest tests
+        - docker run --rm -t -v `pwd`:/cmsml -w /cmsml $image bash -c "python -m unittest tests"
 
     - stage: test
-      python: 3.6
-      env:
-        - JOB=test_python36
-      install:
-        - pip install -r requirements.txt
-      script:
-        - python -m unittest tests
-
-    - stage: test
-      python: 3.7
       env:
         - JOB=test_python37
+        - IMAGE=cmsml/cmsml:3.7
       install:
-        - pip install -r requirements.txt
+        - docker pull $image
       script:
-        - python -m unittest tests
+        - docker run --rm -t -v `pwd`:/cmsml -w /cmsml $image bash -c "python -m unittest tests"
 
     - stage: test
-      python: 3.8
       env:
         - JOB=test_python38
+        - IMAGE=cmsml/cmsml:3.8
       install:
-        - pip install -r requirements.txt
+        - docker pull $image
       script:
-        - python -m unittest tests
+        - docker run --rm -t -v `pwd`:/cmsml -w /cmsml $image bash -c "python -m unittest tests"

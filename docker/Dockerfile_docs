@@ -1,0 +1,6 @@
+FROM cmsml/cmsml:3.8
+
+# python software stack
+RUN pip install sphinx
+RUN pip install sphinx-rtd-theme
+RUN pip install autodocsumm
