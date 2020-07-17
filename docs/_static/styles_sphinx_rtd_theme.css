@@ -1,13 +1,13 @@
 /* sphinx_rtd_theme styles */
 
 div.wy-side-nav-search {
-    background-color: #ffffff;
+    background-color: #ffffff !important;
 }
 
 div.wy-side-nav-search div.version {
-    color: #b3b3b3;
+    color: #b3b3b3 !important;
 }
 
 form#rtd-search-form > input[type="text"] {
-    border: 0;
+    border: 0 !important;
 }
