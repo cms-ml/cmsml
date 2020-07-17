@@ -18,33 +18,33 @@ jobs:
         - JOB=lint
         - IMAGE=cmsml/cmsml
       install:
-        - docker pull $image
+        - docker pull $IMAGE
       script:
-        - bash tests/docker.sh $image "flake8 cmsml setup.py"
+        - bash tests/docker.sh $IMAGE "flake8 cmsml setup.py"
 
     - stage: test
       env:
         - JOB=test_python27
         - IMAGE=cmsml/cmsml:2.7
       install:
-        - docker pull $image
+        - docker pull $IMAGE
       script:
-        - bash tests/docker.sh $image
+        - bash tests/docker.sh $IMAGE
 
     - stage: test
       env:
         - JOB=test_python37
         - IMAGE=cmsml/cmsml:3.7
       install:
-        - docker pull $image
+        - docker pull $IMAGE
       script:
-        - bash tests/docker.sh $image
+        - bash tests/docker.sh $IMAGE
 
     - stage: test
       env:
         - JOB=test_python38
         - IMAGE=cmsml/cmsml:3.8
       install:
-        - docker pull $image
+        - docker pull $IMAGE
       script:
-        - bash tests/docker.sh $image
+        - bash tests/docker.sh $IMAGE
