@@ -2,8 +2,10 @@
    :end-before: marker-after-header
 
 
-.. .. toctree::
-..    :maxdepth: 1
+.. toctree::
+   :maxdepth: 1
+
+   api/index
 
 
 .. include:: ../README.rst

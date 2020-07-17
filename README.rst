@@ -31,8 +31,43 @@ Python Package of the CMS Machine Learning Group
 
 .. marker-after-header
 
+
 .. note::
    This project is under development. Click `here <https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&>`__ to submit a feature suggestion!
+
+
+Testing
+-------
+
+The tests can be triggered with
+
+.. code-block:: shell
+
+   python -m unittest tests
+
+and in general, they should be run for Python 2.7, 3.7 and 3.8. To run tests in a docker container, do
+
+.. code-block:: shell
+
+   # run the tests
+   ./tests/docker.sh cmsml/cmsml
+
+   # or interactively by adding a flag "i" to the command
+   ./tests/docker.sh cmsml/cmsml i
+   > python -m unittest tests
+
+In addition, before pusing to the repository, `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__ compatibility should be checked with `flake8 <https://pypi.org/project/flake8/>`__
+
+.. code-block:: shell
+
+   flake8 cmsml setup.py
+
+or via using the docker container
+
+.. code-block:: shell
+
+   # run the tests
+   ./tests/docker.sh cmsml/cmsml "flake8 cmsml setup.py"
 
 
 Development

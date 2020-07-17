@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
+# Script to build, tag and eventually push all docker images.
+# Arguments:
+#   1. A flag to decide whether images should be pushed to the docker hub. Defaults to "1".
+
 action() {
     local this_file="$( [ ! -z "$ZSH_VERSION" ] && echo "${(%):-%x}" || echo "${BASH_SOURCE[0]}" )"
     local this_dir="$( cd "$( dirname "$this_file" )" && pwd )"
+
+    local push_images="${1:-1}"
 
     build_image() {
         local docker_file="$1"
@@ -32,7 +38,7 @@ action() {
         done
 
         # push
-        if [ "$CMSML_PUSH_IMAGE" != "0" ]; then
+        if [ "$push_images" = "1" ]; then
             for tag in "${@:2}"; do
                 docker push "cmsml/$image:$tag"
             done

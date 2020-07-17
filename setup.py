@@ -28,7 +28,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Information Technology",
-    "Topic :: System :: Monitoring",
 ]
 
 
@@ -65,6 +64,9 @@ setup(
     long_description=long_description,
     install_requires=install_requires,
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4'",
+    extras_require={
+        "docs": ["sphinx", "sphinx-rtd-theme", "autodocsumm"],
+    },
     zip_safe=False,
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
