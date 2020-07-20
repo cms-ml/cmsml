@@ -20,7 +20,7 @@ jobs:
       install:
         - docker pull $IMAGE
       script:
-        - bash tests/docker.sh $IMAGE "flake8 cmsml setup.py"
+        - bash tests/docker.sh $IMAGE "flake8 cmsml tests setup.py"
 
     - stage: test
       env:
