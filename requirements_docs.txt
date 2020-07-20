@@ -1,3 +1,4 @@
+six
 sphinx
 sphinx-rtd-theme
 autodocsumm

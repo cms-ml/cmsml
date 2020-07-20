@@ -37,12 +37,14 @@ with open(os.path.join(this_dir, "README.rst"), "r") as f:
 
 
 # load installation requirements
+readlines = lambda f: [line.strip() for line in f.readlines() if line.strip()]
 with open(os.path.join(this_dir, "requirements.txt"), "r") as f:
-    install_requires = [line.strip() for line in f.readlines() if line.strip()]
+    install_requires = readlines(f)
+
 
 # load docs requirements
 with open(os.path.join(this_dir, "requirements_docs.txt"), "r") as f:
-    docs_requires = [line.strip() for line in f.readlines() if line.strip()]
+    docs_requires = [line for line in readlines(f) if line not in install_requires]
 
 
 # load meta infos
