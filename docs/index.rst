@@ -9,6 +9,7 @@ Table of contents
    :maxdepth: 1
 
    saving
+   clis
    api/index
 
 

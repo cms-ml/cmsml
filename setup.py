@@ -71,6 +71,11 @@ setup(
     extras_require={
         "docs": docs_requires,
     },
+    entry_points={
+        "console_scripts": [
+            "cmsml_open_tf_graph = cmsml.scripts.open_tf_graph:main",
+        ],
+    },
     zip_safe=False,
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
