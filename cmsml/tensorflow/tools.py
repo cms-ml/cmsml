@@ -9,6 +9,8 @@ __all__ = []
 
 import os
 
+import six
+
 
 def import_tf():
     """
@@ -179,3 +181,51 @@ def load_graph(path, create_session=None, as_text=None):
         return graph, session
     else:
         return graph
+
+
+def write_graph_summary(graph, summary_dir, **kwargs):
+    """
+    Writes the summary of a *graph* to a directory *summary_dir* using a ``tf.summary.FileWriter``
+    (v1) or ``tf.summary.create_file_writer`` (v2). This summary can be used later on to visualize
+    the graph via tensorboard. *graph* can be either a graph object or a path to a protobuf file. In
+    the latter case, :py:func:`load_graph` is used and all *kwargs* are forwarded.
+
+    .. note::
+        When used with TensorFlow v1, eager mode must be disabled.
+    """
+
+    # prepare the summary dir
+    if not os.path.exists(summary_dir):
+        os.makedirs(summary_dir)
+
+    # read the graph when a string is passed
+    if isinstance(graph, six.string_types):
+        graph = load_graph(graph, create_session=False, **kwargs)
+
+    # further handling is version dependent
+    tf, tf1, tf_version = import_tf()
+    if tf_version[0] == "1":
+        # switch to non-eager mode for the FileWriter to work
+        eager = getattr(tf1, "executing_eagerly", lambda: False)()
+        if eager:
+            tf1.disable_eager_execution()
+
+        # write to file
+        writer = tf1.summary.FileWriter(summary_dir)
+        writer.add_graph(graph)
+
+        # reset the eager mode
+        if eager:
+            tf1.enable_eager_execution()
+    else:
+        from tensorflow.python.ops import summary_ops_v2 as summary_ops
+
+        # create the writer
+        writer = tf.summary.create_file_writer(summary_dir)
+
+        # write the graph
+        with writer.as_default():
+            summary_ops.graph(graph.as_graph_def(), step=0)
+
+        # close
+        writer.close()

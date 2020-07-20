@@ -8,7 +8,7 @@ import os
 import unittest
 
 import cmsml
-from cmsml.util import tmp_file
+from cmsml.util import tmp_file, tmp_dir
 
 
 class TensorFlowTestCase(unittest.TestCase):
@@ -267,3 +267,19 @@ class TensorFlowTestCase(unittest.TestCase):
 
         self.assertEqual(out.shape, (2, 1))
         self.assertEqual(tuple(out[..., 0]), (1., 1.))
+
+    def test_write_summary(self):
+        concrete_func = self.create_tf_function(concrete=True)
+
+        with tmp_dir(create=False) as path:
+            cmsml.tensorflow.write_graph_summary(concrete_func.graph, path)
+            self.assertTrue(os.path.exists(path))
+            self.assertGreater(len(os.listdir(path)), 0)
+
+        with tmp_file(suffix=".pb") as graph_path:
+            cmsml.tensorflow.save_graph(graph_path, concrete_func)
+            with tmp_dir(create=False) as path:
+                cmsml.tensorflow.write_graph_summary(graph_path, path)
+                self.assertTrue(os.path.exists(path))
+                self.assertGreater(len(os.listdir(path)), 0)
+                self.assertTrue(os.path.exists(path))

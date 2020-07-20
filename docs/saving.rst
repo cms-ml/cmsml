@@ -14,8 +14,8 @@ Relevant API docs:
 
 .. _graph_to_file:
 
-TensorFlow ``tf.Graph`` to protobuf file (TF 1)
------------------------------------------------
+``tf.Graph`` to protobuf file (TF 1)
+------------------------------------
 
 .. code-block:: python
 
@@ -42,8 +42,8 @@ TensorFlow ``tf.Graph`` to protobuf file (TF 1)
        output_names=["output"])
 
 
-TensorFlow ``tf.function`` to protobuf file (TF 2)
---------------------------------------------------
+``tf.function`` to protobuf file (TF 2)
+---------------------------------------
 
 For deeper insights into ``tf.function``, the concepts of signature tracing, polymorphic and concrete functions, see the guide on `Better performance with tf.function <https://www.tensorflow.org/guide/function>`__.
 
