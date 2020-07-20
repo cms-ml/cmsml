@@ -4,6 +4,15 @@
 *.DS_Store
 *.pkl
 *.egg-info
+*.pb
+*.pb.txt
+*.pbtxt
+*.h5
+*.png
+*.pdf
+*.root
+*.npy
+*.npz
 __pycache__
 dist
 build

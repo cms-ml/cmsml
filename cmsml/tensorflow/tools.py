@@ -158,7 +158,7 @@ def load_graph(path, create_session=None, as_text=None):
         if as_text:
             # use a simple pb reader to load the file into graph_def
             from google.protobuf import text_format
-            with open(path, "r") as f:
+            with open(path, "rb") as f:
                 text_format.Merge(f.read(), graph_def)
 
         else:
