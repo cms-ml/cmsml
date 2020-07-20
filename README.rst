@@ -24,16 +24,13 @@
 .. marker-after-badges
 
 
-Python Package of the CMS Machine Learning Group
-
-.. marker-after-slogan
-
-
-.. marker-after-header
-
+CMS Machine Learning Group Python package
+=========================================
 
 .. note::
    This project is under development. Click `here <https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&>`__ to submit a feature suggestion!
+
+.. marker-after-header
 
 
 Testing
@@ -60,14 +57,14 @@ In addition, before pusing to the repository, `PEP 8 <https://www.python.org/dev
 
 .. code-block:: shell
 
-   flake8 cmsml setup.py
+   ./tests/lint.sh
 
 or via using the docker container
 
 .. code-block:: shell
 
    # run the tests
-   ./tests/docker.sh cmsml/cmsml "flake8 cmsml setup.py"
+   ./tests/docker.sh cmsml/cmsml tests/lint.sh
 
 
 Development
