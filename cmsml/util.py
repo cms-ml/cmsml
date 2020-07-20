@@ -1,35 +1,57 @@
 # coding: utf-8
 
-from __future__ import absolute_import
-
 """
 Helpful functions and utilities.
 """
 
-__all__ = ["import_tf"]
+__all__ = ["tmp_file", "tmp_dir"]
 
 
-def import_tf():
+import os
+import shutil
+import tempfile
+import contextlib
+
+
+@contextlib.contextmanager
+def tmp_file(create=False, delete=True, **kwargs):
     """
-    Imports TensorFlow and returns a 3-tuple containing the module itself, the v1 compatibility
-    API (i.e. the TensorFlow module itself if v1 is the primarily installed version), and the
-    package version string. Example:
-
-    .. code-block:: python
-
-        tf, tf1, tf_version = import_tf()
-
-    At some point in the future, when v1 support might get fully removed from TensorFlow 2 or
-    higher, the second tuple element might be *None*.
+    Prepares a temporary file and opens a context yielding its path. When *create* is *True*, the
+    file is created before the context is opened, and deleted upon closing if *delete* is *True*.
+    All *kwargs* are forwarded to :py:func:`tempfile.mkstemp`.
     """
-    import tensorflow as tf
+    path = tempfile.mkstemp(**kwargs)[1]
 
-    # keep a reference to the v1 API as long as v2 provides compatibility
-    tf1 = None
-    tf_version = tf.__version__.split(".", 2)
-    if tf_version[0] == "1":
-        tf1 = tf
-    elif getattr(tf, "compat", None) is not None and getattr(tf.compat, "v1", None) is not None:
-        tf1 = tf.compat.v1
+    exists = os.path.exists(path)
+    if not create and exists:
+        os.remove(path)
+    elif create and not exists:
+        open(path, "a").close()
 
-    return tf, tf1, tf_version
+    try:
+        yield path
+    finally:
+        if delete and os.path.exists(path):
+            os.remove(path)
+
+
+@contextlib.contextmanager
+def tmp_dir(create=True, delete=True, **kwargs):
+    """
+    Prepares a temporary directory and opens a context yielding its path. When *create* is *True*,
+    the directory is created before the context is opened, and deleted upon closing if *delete* is
+    *True*. All *kwargs* are forwarded to :py:func:`tempfile.mkdtemp`.
+    """
+    path = tempfile.mkdtemp(**kwargs)
+
+    exists = os.path.exists(path)
+    if not create and exists:
+        shutil.rmtree(path)
+    elif create and not exists:
+        os.makedirs(path)
+
+    try:
+        yield path
+    finally:
+        if delete and os.path.exists(path):
+            shutil.rmtree(path)

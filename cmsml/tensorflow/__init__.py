@@ -5,8 +5,8 @@
 Classes, functions and tools for efficiently working with TensorFlow.
 """
 
-__all__ = ["save_graph", "load_graph"]
+__all__ = ["import_tf", "save_graph", "load_graph"]
 
 
 # provisioning imports
-from cmsml.tensorflow.tools import save_graph, load_graph
+from cmsml.tensorflow.tools import import_tf, save_graph, load_graph

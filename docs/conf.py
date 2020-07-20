@@ -7,12 +7,10 @@ Sphinx configuration file.
 import sys
 import os
 
-
 thisdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(thisdir, "_extensions"))
 sys.path.insert(0, os.path.dirname(thisdir))
 
-# import cmsml
 import cmsml.__meta__ as meta
 
 
@@ -54,9 +52,18 @@ elif html_theme == "alabaster":
         "travis_button": True,
     })
 
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "autodocsumm", "pydomain_patch"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autosectionlabel",
+    "autodocsumm",
+    "pydomain_patch",
+]
 
 autodoc_member_order = "bysource"
+
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 
 def setup(app):

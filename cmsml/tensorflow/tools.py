@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-Tools.
+TensorFlow tools.
 """
 
 __all__ = []
@@ -9,7 +9,31 @@ __all__ = []
 
 import os
 
-from cmsml.util import import_tf
+
+def import_tf():
+    """
+    Imports TensorFlow and returns a 3-tuple containing the module itself, the v1 compatibility
+    API (i.e. the TensorFlow module itself if v1 is the primarily installed version), and the
+    package version string. Example:
+
+    .. code-block:: python
+
+        tf, tf1, tf_version = import_tf()
+
+    At some point in the future, when v1 support might get fully removed from TensorFlow 2 or
+    higher, the second tuple element might be *None*.
+    """
+    import tensorflow as tf
+
+    # keep a reference to the v1 API as long as v2 provides compatibility
+    tf1 = None
+    tf_version = tf.__version__.split(".", 2)
+    if tf_version[0] == "1":
+        tf1 = tf
+    elif getattr(tf, "compat", None) is not None and getattr(tf.compat, "v1", None) is not None:
+        tf1 = tf.compat.v1
+
+    return tf, tf1, tf_version
 
 
 def save_graph(path, obj, variables_to_constants=False, output_names=None, *args, **kwargs):
@@ -25,10 +49,10 @@ def save_graph(path, obj, variables_to_constants=False, output_names=None, *args
     to names of operations whose subgraphs are extracted (usually just one).
 
     For TensorFlow v2, *obj* can also be a compiled keras model, or either a polymorphic or
-    concrete function as returned by ``tf.function``. See the TensorFlow documentation on
-    `concrete functions <https://www.tensorflow.org/guide/concrete_function>`__ for more info.
-    However, when *variables_to_constants* is *True*, *obj* must neither be a polymorphic
-    function whose input signature is not set yet, nor an uncompiled keras model.
+    concrete function as returned by ``tf.function``. Polymorphic functions either must have a
+    defined input signature (``tf.function(input_signature=(...,))``) or they must accept no
+    arguments in the first place. See the TensorFlow documentation on `concrete functions
+    <https://www.tensorflow.org/guide/concrete_function>`__ for more info.
 
     *args* and *kwargs* are forwarded to ``tf.train.write_graph`` (v1) or ``tf.io.write_graph``
     (v2).
@@ -47,7 +71,7 @@ def save_graph(path, obj, variables_to_constants=False, output_names=None, *args
         from tensorflow.python.eager.function import ConcreteFunction
 
         if isinstance(obj, tf.keras.Model):
-            learning_phase_orig = tf.keras.backend.learning_phase()
+            learning_phase_orig = tf.keras.backend.get_value(tf.keras.backend.learning_phase())
             tf.keras.backend.set_learning_phase(False)
             model_func = saving_utils.trace_model_call(obj)
             if model_func.function_spec.arg_names and not model_func.input_signature:

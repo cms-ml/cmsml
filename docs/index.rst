@@ -2,9 +2,13 @@
    :end-before: marker-after-header
 
 
+Table of contents
+-----------------
+
 .. toctree::
    :maxdepth: 1
 
+   saving
    api/index
 
 
