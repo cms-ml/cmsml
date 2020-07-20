@@ -113,6 +113,14 @@ class TensorFlowTestCase(unittest.TestCase):
 
         return func
 
+    def test_import_tf(self):
+        tf, tf1, tf_version = cmsml.tensorflow.import_tf()
+
+        self.assertEqual(len(tf_version), 3)
+
+        if tf_version[0] == "1":
+            self.assertEqual(tf, tf1)
+
     def test_save_graph(self):
         graph, session = self.create_tf1_graph()
         if graph is None or session is None:
