@@ -53,7 +53,7 @@ and in general, they should be run for Python 2.7, 3.7 and 3.8. To run tests in 
    ./tests/docker.sh cmsml/cmsml i
    > python -m unittest tests
 
-In addition, before pusing to the repository, `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__ compatibility should be checked with `flake8 <https://pypi.org/project/flake8/>`__
+In addition, before pushing to the repository, `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__ compatibility should be checked with `flake8 <https://pypi.org/project/flake8/>`__
 
 .. code-block:: shell
 
