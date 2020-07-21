@@ -55,8 +55,8 @@ action() {
     build_image Dockerfile_38 cmsml 3.8
     tag_and_push cmsml 3.8 3 latest
 
-    build_image Dockerfile_docs docs latest
-    tag_and_push docs latest
+    build_image Dockerfile_docs cmsml docs
+    tag_and_push cmsml docs
 }
 
 # entry point
