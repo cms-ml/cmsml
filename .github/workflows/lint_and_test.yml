@@ -19,7 +19,8 @@ jobs:
       - name: Lint 🔍
         run: bash tests/docker.sh cmsml/cmsml tests/lint.sh
 
-  test:
+  test (Python ${{ matrix.tag }}):
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       matrix:
