@@ -5,8 +5,8 @@
 .. marker-after-logo
 
 
-.. image:: https://img.shields.io/travis/cms-ml/cmsml/master.svg?style=flat
-   :target: https://travis-ci.org/cms-ml/cmsml
+.. image:: https://github.com/cms-ml/cmsml/workflows/Lint%20and%20Test/badge.svg
+   :target: https://github.com/cms-ml/cmsml/actions?query=workflow%3A%22Lint+and+Test%22
    :alt: Build status
 
 .. image:: https://readthedocs.org/projects/cmsml/badge/?version=latest
