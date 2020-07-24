@@ -181,6 +181,10 @@ class TensorFlowTestCase(unittest.TestCase):
             cmsml.tensorflow.save_graph(path, frozen_poly_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
+        with tmp_file(suffix=".pb.txt") as path:
+            cmsml.tensorflow.save_graph(path, frozen_poly_func, variables_to_constants=False)
+            self.assertTrue(os.path.exists(path))
+
         with tmp_file(suffix=".pb") as path:
             cmsml.tensorflow.save_graph(path, frozen_poly_func, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
@@ -192,6 +196,10 @@ class TensorFlowTestCase(unittest.TestCase):
             cmsml.tensorflow.save_graph(path, concrete_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
+        with tmp_file(suffix=".pb.txt") as path:
+            cmsml.tensorflow.save_graph(path, concrete_func, variables_to_constants=False)
+            self.assertTrue(os.path.exists(path))
+
         with tmp_file(suffix=".pb") as path:
             cmsml.tensorflow.save_graph(path, concrete_func, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
@@ -200,6 +208,10 @@ class TensorFlowTestCase(unittest.TestCase):
         model = self.create_keras_model(self.tf1)
 
         with tmp_file(suffix=".pb") as path:
+            cmsml.tensorflow.save_graph(path, model, variables_to_constants=False)
+            self.assertTrue(os.path.exists(path))
+
+        with tmp_file(suffix=".pb.txt") as path:
             cmsml.tensorflow.save_graph(path, model, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
