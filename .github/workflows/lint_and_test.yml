@@ -19,12 +19,13 @@ jobs:
       - name: Lint 🔍
         run: bash tests/docker.sh cmsml/cmsml tests/lint.sh
 
-  test (Python ${{ matrix.tag }}):
+  test:
     needs: lint
     runs-on: ubuntu-latest
     strategy:
       matrix:
         tag: ["2.7", "3.7", "3.8"]
+    name: test (Python ${{ matrix.tag }})
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
