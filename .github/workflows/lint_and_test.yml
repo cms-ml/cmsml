@@ -1,0 +1,39 @@
+name: Lint and Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - *
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Pull docker image 🐳
+        run: docker pull cmsml/cmsml
+
+      - name: Lint 🔍
+        run: bash tests/docker.sh cmsml/cmsml tests/lint.sh
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: ["2.7", "3.7", "3.8"]
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Pull docker image 🐳
+        run: docker pull cmsml/cmsml
+
+      - name: Test 🎢
+        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.tag }}
