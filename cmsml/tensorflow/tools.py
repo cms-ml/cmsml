@@ -16,7 +16,7 @@ def import_tf():
     """
     Imports TensorFlow and returns a 3-tuple containing the module itself, the v1 compatibility
     API (i.e. the TensorFlow module itself if v1 is the primarily installed version), and the
-    package version string. Example:
+    package version as a 3-tuple containing strings. Example:
 
     .. code-block:: python
 
@@ -27,12 +27,14 @@ def import_tf():
     """
     import tensorflow as tf
 
+    # split the version into three parts
+    tf_version = tf.__version__.split(".", 2)
+
     # keep a reference to the v1 API as long as v2 provides compatibility
     tf1 = None
-    tf_version = tf.__version__.split(".", 2)
     if tf_version[0] == "1":
         tf1 = tf
-    elif getattr(tf, "compat", None) is not None and getattr(tf.compat, "v1", None) is not None:
+    elif getattr(tf, "compat", None) and getattr(tf.compat, "v1", None):
         tf1 = tf.compat.v1
 
     return tf, tf1, tf_version
@@ -124,14 +126,16 @@ def save_graph(path, obj, variables_to_constants=False, output_names=None, *args
         return tf.io.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
 
 
-def load_graph(path, create_session=None, as_text=None):
+def load_graph(path, create_session=None, session_kwargs=None, as_text=None):
     """
     Reads a saved TensorFlow graph from *path* and returns it. When *create_session* is *True*,
     a session object (compatible with the v1 API) is created and returned as the second value of
     a 2-tuple. The default value of *create_session* is *True* when TensorFlow v1 is detected,
-    and *False* otherwise. When *as_text* is either *True* or *None*, and the file extension is
-    ``".pbtxt"`` or ``".pb.txt"``, the content of the file at *path* is expected to be a
-    human-readable text file. Otherwise, it is read as a binary protobuf file. Example:
+    and *False* otherwise. In case a session is created, *session_kwargs* are forwarded to the
+    session constructor as keyword arguments when set. When *as_text* is either *True* or *None*,
+    and the file extension is ``".pbtxt"`` or ``".pb.txt"``, the content of the file at *path* is
+    expected to be a human-readable text file. Otherwise, it is read as a binary protobuf file.
+    Example:
 
     .. code-block:: python
 
@@ -177,7 +181,7 @@ def load_graph(path, create_session=None, as_text=None):
         tf.import_graph_def(graph_def, name="")
 
     if create_session:
-        session = tf1.Session(graph=graph)
+        session = tf1.Session(graph=graph, **(session_kwargs or {}))
         return graph, session
     else:
         return graph

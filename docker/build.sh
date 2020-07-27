@@ -15,7 +15,6 @@ action() {
         local image="$2"
         local tag="$3"
 
-
         if [ ! -f "$this_dir/$docker_file" ]; then
             2>&1 echo "docker file $docker_file not found in $this_dir"
             return "2"
