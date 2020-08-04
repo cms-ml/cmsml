@@ -5,8 +5,8 @@
 .. marker-after-logo
 
 
-.. image:: https://github.com/cms-ml/cmsml/workflows/Lint%20and%20Test/badge.svg
-   :target: https://github.com/cms-ml/cmsml/actions?query=workflow%3A%22Lint+and+Test%22
+.. image:: https://github.com/cms-ml/cmsml/workflows/Lint%20and%20test/badge.svg
+   :target: https://github.com/cms-ml/cmsml/actions?query=workflow%3A%22Lint+and+test%22
    :alt: Build status
 
 .. image:: https://readthedocs.org/projects/cmsml/badge/?version=latest
