@@ -8,22 +8,22 @@ RUN apt-get update; apt-get clean
 RUN apt-get install -y nano less htop git; apt-get clean
 
 # update pip
-RUN pip install --upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
 
 # install base software
-RUN pip install ipython
+RUN pip install --no-cache-dir ipython
 
 # python software stack
-Run pip install six
-Run pip install flake8
-RUN pip install numpy
-RUN pip install scipy
-RUN pip install matplotlib
-RUN pip install pandas
-RUN pip install numexpr
-RUN pip install jupyterlab
-RUN pip install notebook
-RUN pip install scikit-learn
-RUN pip install scikit-optimize
-RUN pip install tensorflow
-RUN pip install xgboost
+Run pip install --no-cache-dir six
+Run pip install --no-cache-dir flake8
+RUN pip install --no-cache-dir numpy
+RUN pip install --no-cache-dir scipy
+RUN pip install --no-cache-dir matplotlib
+RUN pip install --no-cache-dir pandas
+RUN pip install --no-cache-dir numexpr
+RUN pip install --no-cache-dir jupyterlab
+RUN pip install --no-cache-dir notebook
+RUN pip install --no-cache-dir scikit-learn
+RUN pip install --no-cache-dir scikit-optimize
+RUN pip install --no-cache-dir tensorflow
+RUN pip install --no-cache-dir xgboost

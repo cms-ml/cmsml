@@ -1,4 +1,4 @@
-name: Lint and Test
+name: Lint and test
 
 on:
   workflow_dispatch:
@@ -34,5 +34,5 @@ jobs:
       - name: Pull docker image 🐳
         run: docker pull cmsml/cmsml:${{ matrix.tag }}
 
-      - name: Test 🎢
+      - name: Test 🎰
         run: bash tests/docker.sh cmsml/cmsml:${{ matrix.tag }}
