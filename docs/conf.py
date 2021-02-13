@@ -67,6 +67,6 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 
 def setup(app):
-    app.add_stylesheet("styles_common.css")
+    app.add_css_file("styles_common.css")
     if html_theme in ("sphinx_rtd_theme", "alabaster"):
-        app.add_stylesheet("styles_{}.css".format(html_theme))
+        app.add_css_file("styles_{}.css".format(html_theme))

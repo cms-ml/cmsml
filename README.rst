@@ -14,7 +14,7 @@
    :alt: Deploy images
 
 .. image:: https://readthedocs.org/projects/cmsml/badge/?version=latest
-   :target: http://cmsml.readthedocs.io/en/latest
+   :target: http://cmsml.readthedocs.io
    :alt: Documentation status
 
 .. image:: https://img.shields.io/pypi/v/cmsml.svg?style=flat
@@ -31,10 +31,20 @@
 CMS Machine Learning Group Python package
 =========================================
 
-.. note::
-   This project is under development. Click `here <https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&>`__ to submit a feature suggestion!
+The documentation of this Python package is hosted on `readthedocs <http://cmsml.readthedocs.io>`__.
+
+**However**, note that this documentation only covers the API and technical aspects of the package itself.
+Usage examples and further techniques for working with machine learning tools in CMS, alongside a collection of useful guidelines can be found in the `general CMS ML group documentation<https://cms-ml.github.io/documentation>`__.
+
+Click `here <https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&>`__ to submit a feature suggestion!
 
 .. marker-after-header
+
+
+Docker images
+-------------
+
+To use the cmsml package via docker, checkour our `DockerHub <https://hub.docker.com/repository/docker/cmsml/cmsml>`__ which contains tags for several Python versions.
 
 
 Testing
