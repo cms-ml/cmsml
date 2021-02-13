@@ -2,9 +2,11 @@ name: Deploy images
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
+    inputs:
+      build_only:
+        description: Build only? (true|false)
+        required: false
+        default: 'false'
 
 jobs:
   py27:
@@ -22,7 +24,7 @@ jobs:
           dockerfile: docker/Dockerfile_27
           repository: cmsml/cmsml
           tags: 2.7,2
-          push: true
+          push: ${{ github.event.inputs.build_only != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -41,7 +43,7 @@ jobs:
           dockerfile: docker/Dockerfile_37
           repository: cmsml/cmsml
           tags: 3.7
-          push: true
+          push: ${{ github.event.inputs.build_only != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -60,7 +62,7 @@ jobs:
           dockerfile: docker/Dockerfile_38
           repository: cmsml/cmsml
           tags: 3.8,3,latest
-          push: true
+          push: ${{ github.event.inputs.build_only != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -80,6 +82,6 @@ jobs:
           dockerfile: docker/Dockerfile_docs
           repository: cmsml/cmsml
           tags: docs
-          push: true
+          push: ${{ github.event.inputs.build_only != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}

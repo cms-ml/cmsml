@@ -7,7 +7,11 @@
 
 .. image:: https://github.com/cms-ml/cmsml/workflows/Lint%20and%20test/badge.svg
    :target: https://github.com/cms-ml/cmsml/actions?query=workflow%3A%22Lint+and+test%22
-   :alt: Build status
+   :alt: Lint and test
+
+.. image:: https://github.com/cms-ml/cmsml/workflows/Deploy%20images/badge.svg
+   :target: https://github.com/cms-ml/cmsml/actions?query=workflow%3A%22Deploy+images%22
+   :alt: Deploy images
 
 .. image:: https://readthedocs.org/projects/cmsml/badge/?version=latest
    :target: http://cmsml.readthedocs.io/en/latest
