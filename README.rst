@@ -34,7 +34,7 @@ CMS Machine Learning Group Python package
 The documentation of this Python package is hosted on `readthedocs <http://cmsml.readthedocs.io>`__.
 
 **However**, note that this documentation only covers the API and technical aspects of the package itself.
-Usage examples and further techniques for working with machine learning tools in CMS, alongside a collection of useful guidelines can be found in the `general CMS ML group documentation<https://cms-ml.github.io/documentation>`__.
+Usage examples and further techniques for working with machine learning tools in CMS, alongside a collection of useful guidelines can be found in the `general CMS ML group documentation <https://cms-ml.github.io/documentation>`__.
 
 Click `here <https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&>`__ to submit a feature suggestion!
 
