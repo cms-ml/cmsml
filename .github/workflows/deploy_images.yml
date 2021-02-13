@@ -61,14 +61,34 @@ jobs:
           path: docker
           dockerfile: docker/Dockerfile_38
           repository: cmsml/cmsml
-          tags: 3.8,3,latest
+          tags: 3.8
+          push: ${{ github.event.inputs.build_only != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  py39:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_39
+          repository: cmsml/cmsml
+          tags: 3.9,3,latest
           push: ${{ github.event.inputs.build_only != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   docs:
-    needs: py38
+    needs: py39
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.build_only != 'true' }}
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
