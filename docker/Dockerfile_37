@@ -27,3 +27,10 @@ RUN pip install --no-cache-dir scikit-learn
 RUN pip install --no-cache-dir scikit-optimize
 RUN pip install --no-cache-dir tensorflow
 RUN pip install --no-cache-dir xgboost
+
+# install cmsml from master
+RUN git clone https://github.com/cms-ml/cmsml.git && \
+    cd cmsml && \
+    pip install --no-cache-dir . && \
+    cd .. && \
+    rm -rf cmsml
