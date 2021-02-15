@@ -7,13 +7,9 @@ WORKDIR /root
 RUN apt-get update; apt-get clean
 RUN apt-get install -y nano less htop git; apt-get clean
 
-# update pip
-RUN pip install --no-cache-dir --upgrade pip
-
-# install base software
-RUN pip install --no-cache-dir ipython
-
 # python software stack
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade ipython
 Run pip install --no-cache-dir six
 Run pip install --no-cache-dir flake8
 RUN pip install --no-cache-dir numpy
@@ -27,6 +23,7 @@ RUN pip install --no-cache-dir scikit-learn
 RUN pip install --no-cache-dir scikit-optimize
 RUN pip install --no-cache-dir tensorflow
 RUN pip install --no-cache-dir xgboost
+RUN pip install --no-cache-dir scinum
 
 # install cmsml from master
 RUN git clone https://github.com/cms-ml/cmsml.git && \
