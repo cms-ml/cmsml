@@ -12,5 +12,5 @@ __credits__ = ["Marcel Rieger"]
 __contact__ = "https://github.com/cms-ml/cmsml"
 __license__ = "BSD-3-Clause"
 __status__ = "Development"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = []
