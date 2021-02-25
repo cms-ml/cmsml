@@ -4,8 +4,6 @@
 TensorFlow tests.
 """
 
-import os
-
 import cmsml
 
 from . import CMSMLTestCase, require_py3, require_nvml
