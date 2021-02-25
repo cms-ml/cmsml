@@ -3,8 +3,16 @@ name: Deploy images
 on:
   workflow_dispatch:
     inputs:
-      build_only:
-        description: Build only? (true|false)
+      skip_push:
+        description: Skip pushing images? (true|false)
+        required: false
+        default: 'false'
+      skip_testing:
+        description: Skip testing images? (true|false)
+        required: false
+        default: 'false'
+      skip_docs:
+        description: Skip the docs image? (true|false)
         required: false
         default: 'false'
 
@@ -24,7 +32,28 @@ jobs:
           dockerfile: docker/Dockerfile_27
           repository: cmsml/cmsml
           tags: 2.7,2
-          push: ${{ github.event.inputs.build_only != 'true' }}
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  py27_testing:
+    needs: py27
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_27_testing
+          repository: cmsml/cmsml
+          tags: 2.7_testing,2_testing
+          push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -43,7 +72,28 @@ jobs:
           dockerfile: docker/Dockerfile_37
           repository: cmsml/cmsml
           tags: 3.7
-          push: ${{ github.event.inputs.build_only != 'true' }}
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  py37_testing:
+    needs: py37
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_37_testing
+          repository: cmsml/cmsml
+          tags: 3.7_testing
+          push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -62,7 +112,28 @@ jobs:
           dockerfile: docker/Dockerfile_38
           repository: cmsml/cmsml
           tags: 3.8,3,latest
-          push: ${{ github.event.inputs.build_only != 'true' }}
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  py38_testing:
+    needs: py38
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_38_testing
+          repository: cmsml/cmsml
+          tags: 3.8_testing,3_testing,latest_testing
+          push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -82,15 +153,36 @@ jobs:
   #         path: docker
   #         dockerfile: docker/Dockerfile_39
   #         repository: cmsml/cmsml
-  #         tags: 3.9,3,latest
-  #         push: ${{ github.event.inputs.build_only != 'true' }}
+  #         tags: 3.9
+  #         push: ${{ github.event.inputs.skip_push != 'true' }}
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #
+  # py39_testing:
+  #   needs: py39
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
+  #   steps:
+  #     - name: Checkout 🛎️
+  #       uses: actions/checkout@v2
+  #       with:
+  #         persist-credentials: false
+
+  #     - name: Build and deploy image 🐳
+  #       uses: docker/build-push-action@v1
+  #       with:
+  #         path: docker
+  #         dockerfile: docker/Dockerfile_39_testing
+  #         repository: cmsml/cmsml
+  #         tags: 3.9_testing
+  #         push: ${{ github.event.inputs.skip_push != 'true' }}
   #         username: ${{ secrets.DOCKERHUB_USERNAME }}
   #         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   docs:
     needs: py38
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.build_only != 'true' }}
+    if: ${{ github.event.inputs.skip_docs != 'true' && github.event.inputs.skip_push != 'true' }}
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
@@ -104,6 +196,6 @@ jobs:
           dockerfile: docker/Dockerfile_docs
           repository: cmsml/cmsml
           tags: docs
-          push: ${{ github.event.inputs.build_only != 'true' }}
+          push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
