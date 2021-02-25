@@ -12,3 +12,4 @@ __all__ = ["__version__"]
 from cmsml.__meta__ import __version__
 from cmsml import util
 from cmsml import tensorflow
+from cmsml import keras

@@ -20,7 +20,8 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
         super(GPUStatsLogger, self).__init__(*args, **kwargs)
 
         # setup py3nvml
-        self.smi = verbose_import("py3nvml", pip_name="py3nvml").py3nvml
+        py3nvml = verbose_import("py3nvml", pip_name="py3nvml", user=self.__class__.__name__)
+        self.smi = py3nvml.py3nvml
         self.smi.nvmlInit()
 
         # get device handles

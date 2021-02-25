@@ -5,13 +5,14 @@ TensorFlow tests.
 """
 
 import os
-import unittest
 
 import cmsml
 from cmsml.util import tmp_file, tmp_dir
 
+from . import CMSMLTestCase
 
-class TensorFlowTestCase(unittest.TestCase):
+
+class TensorFlowTestCase(CMSMLTestCase):
 
     def __init__(self, *args, **kwargs):
         super(TensorFlowTestCase, self).__init__(*args, **kwargs)

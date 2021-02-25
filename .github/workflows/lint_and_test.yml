@@ -32,7 +32,7 @@ jobs:
           persist-credentials: false
 
       - name: Pull docker image 🐳
-        run: docker pull cmsml/cmsml:${{ matrix.tag }}
+        run: docker pull cmsml/cmsml:${{ matrix.tag }}_testing
 
       - name: Test 🎰
-        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.tag }}
+        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.tag }}_testing

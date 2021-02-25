@@ -10,24 +10,30 @@ __all__ = [
 
 
 import os
+import sys
 import shutil
 import tempfile
 import contextlib
 import types
-import collections
 import importlib
 
 import six
+
+
+lazy_iter_types = (
+    types.GeneratorType,
+    six.moves.collections_abc.MappingView,
+    six.moves.range,
+    six.moves.map,
+    enumerate,
+)
 
 
 def is_lazy_iterable(obj):
     """
     Returns whether *obj* is iterable lazily, such as generators, range objects, maps, etc.
     """
-    iter_types = (
-        types.GeneratorType, collections.MappingView, six.moves.range, six.moves.map, enumerate,
-    )
-    return isinstance(obj, iter_types)
+    return isinstance(obj, lazy_iter_types)
 
 
 def make_list(obj, cast=True):
@@ -45,14 +51,17 @@ def make_list(obj, cast=True):
         return [obj]
 
 
-def verbose_import(user, module_name, package=None, pip_name=None):
+def verbose_import(module_name, user=None, package=None, pip_name=None):
     try:
         return importlib.import_module(module_name, package=package)
-    except ImportError as e:
-        e.msg += " but is required by {}".format(user)
+    except ImportError:
+        e_type, e, traceback = sys.exc_info()
+        msg = str(e)
+        if user:
+            msg += " but is required by {}".format(user)
         if pip_name:
-            e.msg += " (you may want to try 'pip install --user {}')".format(pip_name)
-        raise
+            msg += " (you may want to try 'pip install --user {}')".format(pip_name)
+        six.reraise(e_type, e_type(msg), traceback)
 
 
 @contextlib.contextmanager
