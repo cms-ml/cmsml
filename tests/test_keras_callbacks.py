@@ -21,3 +21,4 @@ class KerasCallbacksTestCase(CMSMLTestCase):
         self.assertTrue("GPU 0 usage [%]" in logs)
         self.assertTrue("GPU 0 vRAM [%]" in logs)
         self.assertTrue("GPU 0 vRAM [MB]" in logs)
+        print("\n".join("{} -> {}".format(*tpl) for tpl in logs.items()))
