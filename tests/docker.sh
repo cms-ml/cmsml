@@ -2,7 +2,7 @@
 
 # Script to run all tests in a docker image.
 # Arguments:
-#   1. The docker image, defaults to "cmsml/cmsml".
+#   1. The docker image, defaults to "cmsml/cmsml:latest_testing".
 #   2. The test command. When just "i", an interactive bash is started instead of running the tests
 #      and exiting. Defaults to "python -m unittest tests".
 
@@ -11,15 +11,24 @@ action() {
     local this_dir="$( cd "$( dirname "$this_file" )" && pwd )"
     local repo_dir="$( cd "$( dirname "$this_dir" )" && pwd )"
 
-    local image="${1:-cmsml/cmsml}"
-    local cmd="${2:-python -m unittest tests}"
+    local image="${1:-cmsml/cmsml:latest_testing}"
+    local cmd="${@:2}"
+    cmd="${cmd:-python -m unittest tests}"
 
-    echo "running docker image $image"
+    # tty options
+    local tty_opts="$( [ -t 0 ] && echo "-ti" || echo "-t" )"
 
+    # build the bash command
+    local bash_cmd
     if [ "$cmd" = "i" ] || [ "$cmd" = "interactive" ]; then
-        docker run --rm -t -v "$repo_dir":/cmsml -w /cmsml "$image" bash
+        bash_cmd="bash"
     else
-        docker run --rm -ti -v "$repo_dir":/cmsml -w /cmsml "$image" bash -c "$cmd"
+        bash_cmd="bash -c '$cmd'"
     fi
+
+    # build the full command and run it
+    local cmd="docker run --rm $tty_opts -v '$repo_dir':/cmsml -w /cmsml $image $bash_cmd"
+    echo "cmd: $cmd"
+    eval "$cmd"
 }
 action "$@"
