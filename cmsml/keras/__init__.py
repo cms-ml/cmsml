@@ -6,8 +6,8 @@ Keras callbacks, metrics, losses and other useful tools.
 If not mentioned otherwise, all objects are based on tf.keras rather than plain keras.
 """
 
-__all__ = []
+__all__ = ["GPUStatsLogger"]
 
 
 # provisioning imports
-import cmsml.keras.callbacks
+from cmsml.keras.callbacks import GPUStatsLogger
