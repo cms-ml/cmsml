@@ -16,7 +16,7 @@ action() {
     cmd="${cmd:-python -m unittest tests}"
 
     # tty options
-    local tty_opts="$( [ -t 0 ] && echo "-ti" || echo "-t" )"
+    local tty_opts="$( [ -t 0 ] && echo "-ti" || echo "-t" )"
 
     # build the bash command
     local bash_cmd
