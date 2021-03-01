@@ -12,7 +12,15 @@ import os
 import six
 
 
-def import_tf():
+tf_cpp_log_levels = {
+    "DEBUG": 0,
+    "INFO": 1,
+    "WARNING": 2,
+    "ERROR": 3,
+}
+
+
+def import_tf(log_level="WARNING", autograph_verbosity=3):
     """
     Imports TensorFlow and returns a 3-tuple containing the module itself, the v1 compatibility
     API (i.e. the TensorFlow module itself if v1 is the primarily installed version), and the
@@ -24,8 +32,21 @@ def import_tf():
 
     At some point in the future, when v1 support might get fully removed from TensorFlow 2 or
     higher, the second tuple element might be *None*.
+
+    The verbosity of logs printed by TensorFlow and AutoGraph can be controlled through *log_level*
+    and *autograph_verbosity*.
     """
+    # set the TF_CPP_MIN_LOG_LEVEL before tf gets imported
+    if log_level in tf_cpp_log_levels:
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(tf_cpp_log_levels[log_level])
+
     import tensorflow as tf
+
+    # set log and verbosity levels
+    if log_level:
+        tf.get_logger().setLevel(log_level)
+    if autograph_verbosity >= 0:
+        tf.autograph.set_verbosity(autograph_verbosity)
 
     # split the version into three parts
     tf_version = tf.__version__.split(".", 2)

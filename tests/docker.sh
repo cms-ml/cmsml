@@ -20,7 +20,7 @@ action() {
     if [ "$cmd" = "i" ] || [ "$cmd" = "interactive" ]; then
         docker run --rm -ti -v "$repo_dir":/cmsml -w /cmsml "$image" bash
     else
-        docker run --rm -t -v "$repo_dir":/cmsml -w /cmsml "$image" bash -c "$cmd"
+        docker run --rm -ti -v "$repo_dir":/cmsml -w /cmsml "$image" bash -c "$cmd"
     fi
 }
 action "$@"

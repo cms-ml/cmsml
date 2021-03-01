@@ -12,7 +12,7 @@ __all__ = ["__version__"]
 from cmsml.__meta__ import __version__
 import cmsml.util
 
-# start the lazy importer to keep the global the global scope clean and prevent
+# start the lazy loader to keep the global the global scope clean and prevent
 # imports of packages that might not exist for all users
-from cmsml import lazy_importer
-lazy_importer.start(["tensorflow", "keras"])
+from cmsml import lazy_loader
+lazy_loader.start(["tensorflow", "keras"])
