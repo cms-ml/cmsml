@@ -17,10 +17,30 @@ class TensorFlowTestCase(unittest.TestCase):
         super(TensorFlowTestCase, self).__init__(*args, **kwargs)
 
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-        self.tf, self.tf1, self.tf_version = cmsml.tensorflow.import_tf()
 
+        self._tf = None
+        self._tf1 = None
+        self._tf_version = None
         self._W = None
         self._b = None
+
+    @property
+    def tf(self):
+        if self._tf is None:
+            self._tf, self._tf1, self._tf_version = cmsml.tensorflow.import_tf()
+        return self._tf
+
+    @property
+    def tf1(self):
+        if self._tf1 is None:
+            self._tf, self._tf1, self._tf_version = cmsml.tensorflow.import_tf()
+        return self._tf1
+
+    @property
+    def tf_version(self):
+        if self._tf_version is None:
+            self._tf, self._tf1, self._tf_version = cmsml.tensorflow.import_tf()
+        return self._tf_version
 
     @property
     def W(self):
