@@ -15,12 +15,20 @@ action() {
     local cmd="${@:2}"
     cmd="${cmd:-python -m unittest tests}"
 
-    echo "running docker image '$image' with command '$cmd'"
+    # tty options
+    local tty_opts="$( [ -t 0 ] && echo "-ti" || echo "-t" )"
 
+    # build the bash command
+    local bash_cmd
     if [ "$cmd" = "i" ] || [ "$cmd" = "interactive" ]; then
-        docker run --rm -ti -v "$repo_dir":/cmsml -w /cmsml "$image" bash
+        bash_cmd="bash"
     else
-        docker run --rm -ti -v "$repo_dir":/cmsml -w /cmsml "$image" bash -c "$cmd"
+        bash_cmd="bash -c '$cmd'"
     fi
+
+    # build the full command and run it
+    local cmd="docker run --rm $tty_opts -v '$repo_dir':/cmsml -w /cmsml $image $bash_cmd"
+    echo "cmd: $cmd"
+    eval "$cmd"
 }
 action "$@"
