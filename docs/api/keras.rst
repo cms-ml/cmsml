@@ -2,12 +2,11 @@ cmsml.keras
 ===========
 
 .. automodule:: cmsml.keras
-   :members:
    :autosummary:
 
 
-callbacks
----------
+cmsml.keras.callbacks
+---------------------
 
 .. automodule:: cmsml.keras.callbacks
    :members:
