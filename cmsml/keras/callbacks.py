@@ -76,6 +76,9 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
         if not self.stats:
             return
 
+        # keep track of key-value-unit triplets of the stats
+        data = []
+
         # add stats per device handle
         for n, handle in zip(self.device_numbers, self.handles):
             # get device stats
@@ -85,15 +88,22 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
             # add stats to logs in the configured order
             for s in self.stats:
                 if s == "util":
-                    logs["GPU{} util/%".format(n)] = util.gpu
+                    data.append(("gpu{} util".format(n), util.gpu, "%"))
                 elif s == "mem":
-                    logs["GPU{} mem/MiB".format(n)] = mem.used / (1024**2.)
+                    data.append(("gpu{} mem".format(n), mem.used / 1024**2., "MiB"))
                 elif s == "mem_rel":
-                    logs["GPU{} mem/%".format(n)] = 100 * mem.used / mem.total
+                    data.append(("gpu{} mem".format(n), 100 * mem.used / mem.total, "%"))
 
-    def on_batch_end(self, x, logs=None):
+        # add all of them to the logs with units added to keys
+        logs.update({"{}/{}".format(k, u): v for k, v, u in data})
+
+        # print the stats line
+        stats_line = ", ".join("{}: {:.1f}{}".format(*d) for d in data)
+        print("\nGPU stats --- " + stats_line)
+
+    def on_epoch_end(self, i, logs=None):
         """
-        Logs the GPU stats after each batch *x* and stores them in *logs* when set.
+        Logs the GPU stats after each epoch *i* and stores them in *logs* when set.
         """
         if logs is not None:
             self._log_usage(logs)
