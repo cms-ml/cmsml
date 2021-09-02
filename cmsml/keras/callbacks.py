@@ -82,7 +82,7 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
         # add stats per device handle
         for n, handle in zip(self.device_numbers, self.handles):
             # get device stats
-            mem = self.smi.nvmlDeviceGetMemoryInfo(handle)
+            mem = self.smi.nvmlDeviceGetMemoryInfo(None)
             util = self.smi.nvmlDeviceGetUtilizationRates(handle)
 
             # add stats to logs in the configured order

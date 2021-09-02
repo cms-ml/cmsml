@@ -111,7 +111,7 @@ jobs:
           path: docker
           dockerfile: docker/Dockerfile_38
           repository: cmsml/cmsml
-          tags: 3.8,3,latest
+          tags: 3.8
           push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -132,55 +132,53 @@ jobs:
           path: docker
           dockerfile: docker/Dockerfile_38_testing
           repository: cmsml/cmsml
-          tags: 3.8_testing,3_testing,latest_testing
+          tags: 3.8_testing
           push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  # enable again once TensorFlow supports 39
-  # see https://github.com/tensorflow/tensorflow/issues/44485
-  # py39:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout 🛎️
-  #       uses: actions/checkout@v2
-  #       with:
-  #         persist-credentials: false
+  py39:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
 
-  #     - name: Build and deploy image 🐳
-  #       uses: docker/build-push-action@v1
-  #       with:
-  #         path: docker
-  #         dockerfile: docker/Dockerfile_39
-  #         repository: cmsml/cmsml
-  #         tags: 3.9
-  #         push: ${{ github.event.inputs.skip_push != 'true' }}
-  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #
-  # py39_testing:
-  #   needs: py39
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
-  #   steps:
-  #     - name: Checkout 🛎️
-  #       uses: actions/checkout@v2
-  #       with:
-  #         persist-credentials: false
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_39
+          repository: cmsml/cmsml
+          tags: 3.9,3,latest
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  #     - name: Build and deploy image 🐳
-  #       uses: docker/build-push-action@v1
-  #       with:
-  #         path: docker
-  #         dockerfile: docker/Dockerfile_39_testing
-  #         repository: cmsml/cmsml
-  #         tags: 3.9_testing
-  #         push: ${{ github.event.inputs.skip_push != 'true' }}
-  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+  py39_testing:
+    needs: py39
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_39_testing
+          repository: cmsml/cmsml
+          tags: 3.9_testing,3_testing,latest_testing
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   docs:
-    needs: py38
+    needs: py39
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.skip_docs != 'true' && github.event.inputs.skip_push != 'true' }}
     steps:
