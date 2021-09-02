@@ -242,7 +242,8 @@ def write_graph_summary(graph, summary_dir, **kwargs):
         # reset the eager mode
         if eager:
             tf1.enable_eager_execution()
-    else:
+
+    else:  # 2.X
         from tensorflow.python.ops import summary_ops_v2 as summary_ops
 
         # create the writer
@@ -250,7 +251,11 @@ def write_graph_summary(graph, summary_dir, **kwargs):
 
         # write the graph
         with writer.as_default():
-            summary_ops.graph(graph.as_graph_def(), step=0)
+            # the graph summary op requires a step argument prior to 2.5
+            graph_kwargs = {}
+            if tf_version[1] < "5":
+                graph_kwargs["step"] = 0
+            summary_ops.graph(graph.as_graph_def(), **graph_kwargs)
 
         # close
         writer.close()
