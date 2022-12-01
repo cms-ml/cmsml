@@ -83,7 +83,7 @@ class OpsTable(Ops):
         # return table location, raise error if missing
         return self.get_location(self._table_location)
 
-    def read_table(self) -> dict:
+    def read_markdown_table(self) -> dict:
         """
         Fills the self.ops_dict with all the information filtered form the markdown table
         located at self.table_location
@@ -98,7 +98,8 @@ class OpsTable(Ops):
                                             'CPU': False, 'GPU': False, 'TPU': False, 'allowed_types': types}
 
     def main(self):
-        self.read_table()
+        self.read_markdown_table()
+
 
 class OpsFiles(Ops):
     """ This class is used to search all kernels of tensorflow
@@ -199,8 +200,8 @@ class GraphOpsChecker():
 
     def __init__(self, tf_model_dir: str):
         """
-        This class operates only on a Graph level.
-        It gets all operations used in a tf.saved_model and test their XLA compatiblity.
+        This class taks as input a SavedModel or pb file and returns all unique operators.
+        These unique operators are then matched against their XLA compatiblity.
 
         !!! Be aware, that the compatible list of Ops changes with each tensorflow version. !!!
 
@@ -208,8 +209,22 @@ class GraphOpsChecker():
             tf_model_dir (str): path to tf.saved_model
         """
         self.model_location = Path(tf_model_dir)
-        self.is_keras_model = self.is_keras_model()  # True if model is saved with keras
-        self.model = self.load_model()  # the loaded model
+        self.is_keras_model = self._is_keras_model()  # True if model is saved with keras
+        self.model = self.load_model()  # the model with all signatures
+
+    def _is_keras_model(self) -> None:
+        p = self.model_location / 'keras_metadata.pb'
+        self.is_keras_model = p.is_file()
+
+    def load_model(self):
+        if tf.saved_model.contains_saved_model(self.model_location):
+            if self.is_keras_model:
+                model = tf.keras.models.load_model(self.model_location)
+            else:
+                model = tf.saved_model.load(self.model_location)
+            return model
+        else:
+            raise Exception(f'There is no saved model under the directory: {self.model_location}')
 
     def _get_node_def(self, signature: str) -> "google.protobuf.pyext._message.RepeatedCompositeContainer":
         # get graph_def
@@ -235,17 +250,6 @@ class GraphOpsChecker():
 
     def get_unique_ops(self, signature='serving_default'):
         return {node.op for node in self._get_node_def(signature)}
-
-    def is_keras_model(self) -> None:
-        p = self.model_location / 'keras_metadata.pb'
-        self.is_keras_model = p.is_file()
-
-    def load_model(self):
-        if self.is_keras_model:
-            model = tf.keras.models.load_model(self.model_location)
-        else:
-            model = tf.saved_model.load(self.model_location)
-        return model
 
     def extract_graph(self, serving_key):
         """Extract graph if the model is NOT a keras model.
@@ -307,25 +311,6 @@ class GraphOpsChecker():
             return graph_def
 
 
-    def clear_devices(self, graph_def):
-        # removes all device placement information
-        # changes loaded graph inplace
-        # if meta_graph_def --> input_meta_graph_def.graph_def.node
-        for node in graph_def.node:
-            node.device = ''
-
-        # load cleared graph_def into new graph
-        tf.graph_util.import_graph_def(
-            graph_def,
-            input_map=None,
-            return_elements=None,
-            name=None,
-            op_dict=None,
-            producer_op_list=None
-        )
-
-
-
 if __name__ == '__main__':
 
     path_to_tensorflow = '/Users/bogdanwiederspan/Desktop/tensorflow_repo/tensorflow'
@@ -343,5 +328,3 @@ if __name__ == '__main__':
     from IPython import embed
     embed()
     exit()
-
-

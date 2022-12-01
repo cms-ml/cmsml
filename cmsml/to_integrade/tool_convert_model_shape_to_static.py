@@ -246,6 +246,23 @@ class ModelConverter():
         # save signature dictionary
         self.signatures = signature_dictionary
 
+    def clear_devices(self, graph_def):
+        """
+        Create new graph with settings of graph_def, but cleared device.
+        """
+        # removes all device placement information
+        for node in graph_def.node:
+            node.device = ''
+
+        # create create modified graph
+        graph = tf.Graph()
+        with graph as g:
+            # load cleared graph_def into new graph
+            tf.graph_util.import_graph_def(graph_def,
+                                           name='')
+        return graph
+
+
     def save_signatures(self):
         """
         Save signature as saved_model under <saving_dir>
