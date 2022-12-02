@@ -208,31 +208,80 @@ class GraphOpsChecker():
         Args:
             tf_model_dir (str): path to tf.saved_model
         """
-        self.model_location = Path(tf_model_dir)
-        self.is_keras_model = self._is_keras_model()  # True if model is saved with keras
-        self.model = self.load_model()  # the model with all signatures
+        self._model_location = Path(tf_model_dir)
 
-    def _is_keras_model(self) -> None:
-        p = self.model_location / 'keras_metadata.pb'
-        self.is_keras_model = p.is_file()
+        self.is_keras = None  # FLAG set by loading methods
+        self.is_saved_model = None
+        self.is_graph = None
+        self.set_flags(self.model_location)  # set is_FLAGS
+        self.check_completness()  #  check if pb or saved model exists
+
+        self.loaded_model = self.load_model()  # None if graph is loaded not Savedmodel
+
+    @property
+    def model_location(self):
+        return str(self._model_location)
+
+    def set_flags(self, path):
+        def _is_keras_model(saved_model_dir) -> None:
+            # helper function to check if a model is saved by keras API
+            # when this file exists its a keras model
+            p = Path(saved_model_dir) / 'keras_metadata.pb'
+            return p.is_file()
+
+        self.is_saved_model = tf.saved_model.contains_saved_model(str(path))
+        self.is_keras = _is_keras_model(str(path))
+        self.is_graph = str(path).endswith('.pb')
+
+    def check_completness(self):
+        if not self._model_location.exists():
+            raise ValueError(f'Path {self.model_location} does not exist.')
+
+        if not self.is_saved_model and not self.is_graph:
+            raise Exception(f'You try to load either a saved model directory,'
+                            'or a graph. Your given path \n: {self.model_location} \n'
+                            ' does not contain neither a model or graph..')
 
     def load_model(self):
-        if tf.saved_model.contains_saved_model(self.model_location):
-            if self.is_keras_model:
-                model = tf.keras.models.load_model(self.model_location)
-            else:
-                model = tf.saved_model.load(self.model_location)
-            return model
-        else:
-            raise Exception(f'There is no saved model under the directory: {self.model_location}')
+        """
+        Returns:
+            SavedModel
+        """
+        # if graph is loaded return None for model
+        if not self.is_saved_model:
+            return False
 
-    def _get_node_def(self, signature: str) -> "google.protobuf.pyext._message.RepeatedCompositeContainer":
-        # get graph_def
-        graph = self.model.signatures[signature].graph.as_graph_def()
-        # get node_def,
-        # library is list-like "tensorflow.core.framework.function_pb2.FunctionDefLibrary"
-        node_def = graph.library.function[0].node_def
-        return node_def
+        if self.is_keras:
+            return tf.keras.models.load_model(self.model_location)
+        else:
+            return tf.saved_model.load(self.model_location)
+
+
+    def _load_graphdef(self, pb_file):
+        # read pb file and returns graphdef of the graph
+        # use this for tf1 models
+        with tf.io.gfile.GFile(pb_file, 'rb') as f:
+            graph_def = tf.compat.v1.GraphDef()
+            graph_def.ParseFromString(f.read())
+            return graph_def
+
+
+
+    def get_graph_def(self, signature='serving_default'):
+        if self.loaded_model:
+            return self.model.signatures[signature].graph.as_graph_def()
+        else:
+            return self._load_graphdef(self.model_location)
+
+
+    def get_node_def(self, graph_def) -> "google.protobuf.pyext._message.RepeatedCompositeContainer":
+        # library is a FunctionDef
+        # you find all concret
+
+        # nodedef contains all Nodes:
+        # 'name'=your_name, 'op'=unique_op_name, input='tensor_name_used_as_input'
+        # 'device'='which_device_it_should_be_placed'
+        return graph_def.library.function[0].node_def
 
     def get_unique_names(self, signature):
         """
@@ -304,20 +353,14 @@ class GraphOpsChecker():
         for op, status in table:
             print(f'{op:20}|{str(bool(status)):5}')
 
-    def read_graphdef(self, pb_file):
-        with tf.io.gfile.GFile(pb_file, 'rb') as f:
-            graph_def = tf.compat.v1.GraphDef()
-            graph_def.ParseFromString(f.read())
-            return graph_def
-
 
 if __name__ == '__main__':
 
-    path_to_tensorflow = '/Users/bogdanwiederspan/Desktop/tensorflow_repo/tensorflow'
-    path_to_table = '/Users/bogdanwiederspan/Documents/docker_mounts/bazel/mount_point.txt'
+    #path_to_tensorflow = '/Users/bogdanwiederspan/Desktop/tensorflow_repo/tensorflow'
+    path_to_table = './mount_point.txt'
 
     table_ops = OpsTable(path_to_table)
-    files_ops = OpsFiles(path_to_tensorflow)
+    #files_ops = OpsFiles(path_to_tensorflow)
 
     bucket = None
     model_dir = './saved_model_12_128'
