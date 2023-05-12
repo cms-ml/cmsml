@@ -18,13 +18,12 @@ class TestConvertModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         BATCHSIZES = "1 2 4"
-        ORDER_OF_INPUT_NODES = ["first", "second", "third"]
         # global paths to the temp dirs containing the test models
         cls.paths = TestConvertModel.save_test_model()
         cls.keras_converter = ModelConverter(
-            src_dir=cls.paths["keras"], batch_sizes=BATCHSIZES, inputs=ORDER_OF_INPUT_NODES)
+            src_dir=cls.paths["keras"], batch_sizes=BATCHSIZES)
         cls.tf_converter = ModelConverter(
-            src_dir=cls.paths["tf"], batch_sizes=BATCHSIZES, inputs=ORDER_OF_INPUT_NODES)
+            src_dir=cls.paths["tf"], batch_sizes=BATCHSIZES)
 
     @classmethod
     def tearDownClass(cls):
@@ -64,13 +63,15 @@ class TestConvertModel(unittest.TestCase):
         str_bs = "1 2 4"
         tuple_bs = (1., 2., 4.)
         fail_bs = "1;2;4"
+        fail_bs2 = "1 2  4"
 
         self.assertEqual(result_bs, ModelConverter._map_batch_sizes(str_bs))
         self.assertEqual(result_bs, ModelConverter._map_batch_sizes(tuple_bs))
         self.assertEqual(result_bs, ModelConverter._map_batch_sizes(list(tuple_bs)))
 
-        with self.assertRaises(Exception):
-            ModelConverter._map_batch_sizes(fail_bs)
+        for will_fail_bs in (fail_bs, fail_bs2):
+            with self.assertRaises(Exception):
+                ModelConverter._map_batch_sizes(will_fail_bs)
 
     def test__is_keras(self):
         self.assertTrue(ModelConverter._is_keras(Path(self.paths["keras"])))
@@ -78,76 +79,46 @@ class TestConvertModel(unittest.TestCase):
 
     def test__static_tensorspecs(self):
         batch_size = self.tf_converter.batch_sizes[0]
-        tf_static_spec = set(self.tf_converter._static_tensorspecs(batch_size))
-        keras_static_spec = set(self.tf_converter._static_tensorspecs(batch_size))
+        tf_static_spec = self.tf_converter._static_tensorspecs(batch_size)
+        keras_static_spec = self.keras_converter._static_tensorspecs(batch_size)
 
         # both models should have result in the same TensorSpecs after the conversion
         self.assertEqual(tf_static_spec, keras_static_spec)
 
-        # models should result in this list with TensorSpecs
-        should_be_static_spec = {tf.TensorSpec(shape=(1, 2), dtype=tf.float32, name='first'),
-                                 tf.TensorSpec(shape=(1, 3), dtype=tf.float32, name='second'),
-                                 tf.TensorSpec(shape=(1, 10), dtype=tf.float32, name='third')}
+        # models tensorspec should result this dict with TensorSpecs
+        should_be_static_spec = {"first": tf.TensorSpec(shape=(1, 2), dtype=tf.float32, name="first"),
+                                 "second": tf.TensorSpec(shape=(1, 3), dtype=tf.float32, name="second"),
+                                 "third": tf.TensorSpec(shape=(1, 10), dtype=tf.float32, name="third")}
 
         self.assertEqual(tf_static_spec, should_be_static_spec)
 
-    def test_inputs(self):
+    def test__static_signatures_function(self):
+        # concrete functions between keras and tensorflow
+        # should have the same inputs/outputs with static batch size
 
-        dummy_inputs = [tf.TensorSpec(shape=(None, 2), dtype=tf.float32, name='first'),
-                        tf.TensorSpec(shape=(None, 3), dtype=tf.float32, name='second'),
-                        tf.TensorSpec(shape=(None, 10), dtype=tf.float32, name='third')]
+        keras_concretes = self.keras_converter.create_static_signatures()
+        tf_concretes = self.tf_converter.create_static_signatures()
 
-        keras_inputs = self.keras_converter.inputs
-        tf_inputs = self.tf_converter.inputs
+        # both concrete functions should result in same structured signature
+        equality_check = all([keras_concrete.structured_input_signature == tf_concrete.structured_input_signature for keras_concrete,
+                             tf_concrete in zip(keras_concretes.values(), tf_concretes.values())])
+        self.assertTrue(equality_check)
 
-        # inputs of the concrete function should be in the same order as dummy_inputs
-        self.assertEqual(dummy_inputs, keras_inputs)
-        self.assertEqual(dummy_inputs, tf_inputs)
-
-
-    def test__static_concrete_function(self):
-        batchsize = 1
-
-        # hold = {}
-
-        # for i in range(0, 20):
-        #     m= ModelConverter(
-        #         src_dir=self.paths["tf"], batch_sizes="1 2 4", inputs=["first", "second", "third"])
-
-        #     hold[i] = {}
-        #     hold[i]['names'] = m.graph._arg_keywords
-        #     hold[i]['structured'] = m.graph.structured_input_signature
-        #     hold[i]['inputs'] = m.graph.inputs
-        #     hold[i]['concrete'] = m.graph
-
-        from IPython import embed
-        embed()
-
-        keras_concrete = self.keras_converter._static_concrete_function(batchsize)
-
-        tf_concrete = self.tf_converter._static_concrete_function(batchsize)
-
-
-        # both concrete functions should have the same input_TensorSpec
-        self.assertEqual(keras_concrete.structured_input_signature,
-                        tf_concrete.structured_input_signature)
+        # both signatures should result in same prediction
 
         # # concrete functions can be called and should result in the same result as the model
-        # a = tf.constant(((1., 2.),))
-        # b = tf.constant(((1., 2., 3.),))
+        inputs = {
+            "first": tf.ones(shape=(1, 2)),
+            "second": tf.ones(shape=(1, 3)),
+            "third": tf.ones(shape=(1, 10)),
+        }
 
-        # keras_concrete_result = keras_concrete(a, b)
-        # tf_concrete_result = tf_concrete(a, b)
-        # keras_model_result = self.keras_converter.model(a, b)
-        # tf_model_result = self.tf_converter.model(a, b)
-
-        # self.assertEqual(keras_concrete_result, keras_model_result)
-        # self.assertEqual(tf_concrete_result, tf_model_result)
-        # self.assertEqual(keras_concrete_result, tf_concrete_result)
-
-        # from IPython import embed
-        # embed()
+        with tf.device("/CPU:*"):
+            keras_result = keras_concretes["batch_size_1"](**inputs)
+            tf_result = tf_concretes["batch_size_1"](**inputs)
+            self.assertTrue(tf.math.reduce_all(tf.math.equal(
+                keras_result["dense_1"], tf_result["dense_1"])).numpy())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
