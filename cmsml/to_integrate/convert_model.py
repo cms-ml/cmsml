@@ -110,6 +110,7 @@ class ModelConverter():
             Returns:
                 Path: Path Object of destination of static model
             """
+            src = Path(src)
             if dst == "":
                 # when no destination is given use alternate source path
                 dst = src.with_name("".join((src.name, "_static")))
@@ -216,7 +217,7 @@ class ModelConverter():
         return tensorspecs
 
 
-    def create_static_signatures(self: Sequence[int]) -> dict[tf.types.experimental.ConcreteFunction]:
+    def create_static_signatures(self) -> dict[tf.types.experimental.ConcreteFunction]:
         """
         Exctract the concrete function assoziated with a static <batch_size>.
         Takes a Sequence of ints and returns a dictionary with concrete functions.
@@ -225,6 +226,7 @@ class ModelConverter():
         """
         signature_dictionary = {}
         # create the concrete functions and fill signature dictionary
+
         for batch_size in self.batch_sizes:
             save_serving_key = "".join(("batch_size_", str(batch_size)))
             self._print_notation(f"Create signature with servingkey: {save_serving_key}")
@@ -265,7 +267,8 @@ def main(src: str,
          dst: str = "",
          batch_sizes: str = "1",
          serving_key: str = "serving_default"):
-    converter = ModelConverter(src, dst,
+    converter = ModelConverter(src=src,
+                               dst=dst,
                                serving_key=serving_key,
                                batch_sizes=batch_sizes)
     converter.save_static_graph()
