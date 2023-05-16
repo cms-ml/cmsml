@@ -78,6 +78,7 @@ class TestConvertModel(unittest.TestCase):
         self.assertFalse(ModelConverter._is_keras(Path(self.paths["tf"])))
 
     def test__static_tensorspecs(self):
+        # should create a tensorspec with just the SHAPE being static
         batch_size = self.tf_converter.batch_sizes[0]
         tf_static_spec = self.tf_converter._static_tensorspecs(batch_size)
         keras_static_spec = self.keras_converter._static_tensorspecs(batch_size)
@@ -86,6 +87,7 @@ class TestConvertModel(unittest.TestCase):
         self.assertEqual(tf_static_spec, keras_static_spec)
 
         # models tensorspec should result this dict with TensorSpecs
+        # thus, NAME, DTYPE should be preserve
         should_be_static_spec = {"first": tf.TensorSpec(shape=(1, 2), dtype=tf.float32, name="first"),
                                  "second": tf.TensorSpec(shape=(1, 3), dtype=tf.float32, name="second"),
                                  "third": tf.TensorSpec(shape=(1, 10), dtype=tf.float32, name="third")}
@@ -106,7 +108,7 @@ class TestConvertModel(unittest.TestCase):
 
         # both signatures should result in same prediction
 
-        # # concrete functions can be called and should result in the same result as the model
+        # concrete functions can be called and should predict the same as the model
         inputs = {
             "first": tf.ones(shape=(1, 2)),
             "second": tf.ones(shape=(1, 3)),
