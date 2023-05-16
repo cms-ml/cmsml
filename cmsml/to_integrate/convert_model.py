@@ -37,9 +37,7 @@ class ModelConverter():
 
         self.model = self._load_model()  # the actual saved model
         self.serving_key = serving_key
-        self.graph = self.model.signatures[serving_key]  # the concrete function of the model
-        from IPython import embed; embed()
-        exit()
+        self.concrete_function = self.model.signatures[serving_key]  # concrete function of the model
         self.batch_sizes = self._map_batch_sizes(batch_sizes)  # create sequence of ints
         self.signatures = None  # the static signatures, after the extration
 
@@ -209,7 +207,7 @@ class ModelConverter():
         """
         static_tensorspecs = {}
         # get input layer information
-        input_layers = self.graph.structured_input_signature[1]
+        input_layers = self.concrete_function.structured_input_signature[1]
         # copy layer information and change batch size
         for name, input_layer in input_layers.items():
             shape = input_layer.shape.as_list()
@@ -248,7 +246,7 @@ class ModelConverter():
             static_tensorspec = self._static_tensorspecs(batch_size=batch_size)
             # exctract concrete function with shape of tensorspec
             signature_dictionary[save_serving_key] = tf.function(
-                self.graph).get_concrete_function(**static_tensorspec)
+                self.concrete_function).get_concrete_function(**static_tensorspec)
 
         self.signatures = signature_dictionary
         return signature_dictionary
