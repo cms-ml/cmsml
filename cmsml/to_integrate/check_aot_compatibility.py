@@ -7,16 +7,17 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "4"
 
 class OpsTable():
     supported_devices = ("cpu", "gpu")
+
     """
     AOT needs two requirements to work:
         1) the outcome of an ops-kernel needs to be deterministic
-        2) the ops-Kernel needs to have an XLA implementation.
+        2) the ops-kernel needs to have an XLA implementation.
 
     Tensorflow can return a markdown table containing all XLA compatible ops.
     This class is a wrapper to create this table and consequently read it.
     """
 
-    def __init__(self, tables: tuple[str] | OpsTable = None, create_tables: tuple[bool] = None):
+    def __init__(self, *tables: tuple[str]):
         """
         Args:
             tables (tuple[str] | OpsTable): tuple of location of multiple tables or OpsTables
@@ -26,16 +27,22 @@ class OpsTable():
             table_dir (str): Path to the markdown table
         """
         super().__init__()
-        self.table_locations = [] if tables is None else tables
+        self.table_locations = tables
         self.ops_dict = {}
+        self.merge_markdown_tables()
 
-    def get_unique_ops(self, ops_dict: dict, device: str = None) -> set:
+    @staticmethod
+    def _supported_devices(device):
+        if device not in OpsTable.supported_devices and not None:
+            msg = f"Device {device} is not supported. Supported are: {OpsTable.supported_devices}"
+            raise NotImplementedError(msg)
+
+    def _get_unique_ops(self, device: str = None) -> set:
         """
         Get all unique ops from a given *ops_dict*. If *device*
         is used the result is filtered after a specific device.
 
         Args:
-            ops_dict (dict): Dictionary created by reading the markdown table created using bazel
             device (str, optional): Name of a supported device (cpu, gpu)
 
         Returns:
@@ -44,32 +51,26 @@ class OpsTable():
         Raises:
             NotImplementedError: Raises, when an unsupported device is used.
         """
-        if device not in self.supported_devices and not None:
-            msg = f"The device {device} is not supported. Supported are: {self.supported_devices}"
-            raise NotImplementedError(msg)
+        OpsTable._supported_devices(device)
 
         if device is None:
-            unique_ops = {value["op"] for value in ops_dict.values()}
-        elif ops_dict["op"][device]:
-            unique_ops = {value["op"] for value in ops_dict.values() if value[device]}
+            unique_ops = {value["op"] for value in self.ops_dict.values()}
+        else:
+            unique_ops = {value["op"] for value in self.ops_dict.values() if value[device]}
         return unique_ops
-
-    @property
-    def ops(self) -> set[str]:
-        return self.get_unique_ops(self.opt_dict)
 
     @property
     def cpu_ops(self) -> set[str]:
         # get unique XLA compatible results for CPU only
-        return self.get_unique_ops(self.opt_dict, "cpu")
+        return self._get_unique_ops("cpu")
 
     @property
     def gpu_ops(self) -> set[str]:
         # # get unique XLA compatible results for GPU only
-        return self.get_unique_ops(self.opt_dict, "gpu")
+        return self._get_unique_ops("gpu")
 
     @property
-    def both_devices_ops(self) -> set[str]:
+    def ops(self) -> set[str]:
         # get unique ops that has CPU and GPU implementation
         return self.cpu_ops.intersection(self.gpu_ops)
 
@@ -77,63 +78,53 @@ class OpsTable():
         # number of ops
         return len(self.ops_dict.keys())
 
-    def add_table(self, path: str) -> None:
-        """
-        Add table path to current instance.
-
-        Args:
-            path (str): path to table
-
-        Raises:
-            FileNotFoundError: Path does not exist
-        """
-        if Path(path).exists():
-            self.table_locations.append(str(path))
-        else:
-            raise FileNotFoundError(f"path: {path} does not exist.")
-
     @staticmethod
-    def create_markdown_table(dst: str, devices: str = "CPU", suffix: str = ".md"):
+    def create_markdown_table(device: str = "CPU", save_location=None, suffix: str = ".md"):
         """
-        This function creates a markdown table with all XLA supported ops for given *devices*.
-        You need to be in the CMSSW software enviroment.
-        The table is saved at *dst* with ending *suffix*
+        Creates table stream containing all XLA supported ops for given *device*.
+        You need to be in the CMSSW software enviroment to run this command.
+        The table is saved at *dst*/<current_tensorflow_version>.*suffix*
 
-        Currently only CPU is supported in CMMSW.
         Args:
-            dst (str): destination of resulting file
-            device (str, list, tuple): CPU, GPU (default: CPU)
+            device (str, optional): CPU or GPU (default: CPU)
+            save_location (str): destination of resulting file
             suffix (str, optional): any suffix (default: .md)
+
+        Returns: stream (str): String of markdown table
         """
         import subprocess
         mapping = {"CPU": "XLA_CPU_JIT",
                    "GPU": "XLA_GPU_JIT",
                    }
 
-        if isinstance(devices, str):
-            devices = [devices]
+        # check if enviroment is sourced correctly
+        if subprocess.getstatusoutput("tf2xla_supported_ops")[0] == 127:
+            msg = "Command tf2xla_supported_ops not found."\
+                "Are you sure you sourced your CMSSW enviroment with 'csmenv'?"
+            raise OSError(msg)
 
-        for device in devices:
-            command = ["tf2xla_supported_ops", f"--device={mapping[device]}"]
+        # tf2xla_supported_ops prints the table
+        # catch the stdout put stream and decode into str
+        cmd = ["tf2xla_supported_ops", f"--device={mapping[device]}"]
+        out = subprocess.run(cmd, stdout=subprocess.PIPE)
+        table = out.stdout.read().decode("utf-8")
 
-            suffix if suffix.startswith(".") else f".{suffix}"
-            dst = Path(dst)
-            new_stem = "".join((dst.stem, "_", device))
-            path_of_file = str(dst.with_stem(new_stem).with_suffix(suffix))
+        # save table at *save_location*
+        try:
+            suffix = suffix if suffix.startswith(".") else f".{suffix}"
+            dst = Path(save_location).with_stem(
+                f"tensorflow_v{tf.__version__}_{mapping[device]}").with_suffix(suffix)
+            with open(str(dst), "w") as file:
+                file.write(table)
+        except FileNotFoundError as error:
+            raise(error)
 
-            try:
-                with open(path_of_file, "w") as file:
-                    subprocess.run(command, stdout=file)
-            except Exception:
-                print(f"""There was an error creating the markdown table for {device}. \
-                Are you sure you sourced your CMSSW enviroment with 'csmenv'?""")
-            return path_of_file
+        return table
 
     @staticmethod
-    def read_markdown_table(table: str) -> dict:
+    def read_markdown_table(table: str = None, *, create_table_for_device=None) -> dict:
         """
-        Reads a *table* created with 'OpsTable.create_markdown_table'.
-        The information is turned into a dictionary, which is returned.
+        Read a *markdown_table* created with 'tf2xla_supported_ops' and returns a dictionary.
 
         Args:
             table (str): location of the markdown file
@@ -147,42 +138,46 @@ class OpsTable():
             gpu = "XLA_GPU_JIT" in line
             return cpu, gpu
 
-        with open(table) as file:
-            lines = file.read().splitlines(True)
+        # creation of table has higher priority than reading
+        if create_table_for_device:
+            OpsTable._supported_devices(create_table_for_device)
+            lines = OpsTable.create_markdown_table(device=create_table_for_device)
+        else:
+            with open(table) as file:
+                lines = file.read().splitlines(True)
 
-            # filter out the relevenat ops
-            all_ops = lines[4:-6]
-            # first line contains device information
-            is_cpu, is_gpu = set_device_flags(lines[0])
+        # filter out ops
+        all_ops = lines[4:-6]
+        # first line contains device information
+        is_cpu, is_gpu = set_device_flags(lines[0])
 
-            ops = {}
-            for line_op in all_ops:
-                # remove all non-ops chars
-                for remove_char in ("`", "\n"):
-                    line_op = line_op.replace(remove_char, "")
-                operation, allowed_types = line_op.split("|")
+        ops = {}
+        for line_op in all_ops:
+            # remove all non-ops chars
+            for remove_char in ("`", "\n"):
+                line_op = line_op.replace(remove_char, "")
+            operation, allowed_types = line_op.split("|")
 
-                # clean up whitespace
-                operation = operation.lstrip().rstrip()
-                allowed_types = allowed_types.lstrip().rstrip()
+            # clean up whitespace
+            operation = operation.lstrip().rstrip()
+            allowed_types = allowed_types.lstrip().rstrip()
 
-                # sets the typed of cpu or gpu
-                # its possible to have different allowed types
-                allowed_types_cpu, allowed_types_gpu = None, None
-                if is_cpu:
-                    allowed_types_cpu = allowed_types
-                elif is_gpu:
-                    allowed_types_gpu = allowed_types
+            # sets the typed of cpu or gpu
+            # its possible to have different allowed types
+            op = {"op": operation,
+                  "cpu": None,
+                  "gpu": None,
+                  }
 
-                ops[operation] = {"op": operation,
-                                  "cpu": is_cpu,
-                                  "gpu": is_gpu,
-                                  "allowed_types_cpu": allowed_types_cpu,
-                                  "allowed_types_gpu": allowed_types_gpu,
-                                  }
-            return ops
+            if is_cpu:
+                op["cpu"] = allowed_types
+            elif is_gpu:
+                op["gpu"] = allowed_types
 
-    def merge_markdown_tables(self, *tables: tuple[str]) -> dict:
+            ops[operation] = op
+        return ops
+
+    def merge_markdown_tables(self) -> dict:
         """
         Merges multiple tables of different devices, but same TF version into 1 dictionary.
 
@@ -193,37 +188,42 @@ class OpsTable():
             dict: dictionary of ops with allowed types
         """
 
-        # dont do anything when only 1 table exists
-        if len(tables) == 1 | isinstance(tables, str):
-            return OpsTable.read_markdown_table(self.table_locations)
+        def merge_nested_dict(a, b):
+            # update dict a inplace with entries in b
+            # a and b are nested on first level
 
-        # update multiple tables
-        ops_dicts = []
-        for table in self.table_locations:
-            ops_dicts.append(self.read_markdown_table(table))
+            a_keys = a.keys()
+            b_keys = b.keys()
+            intersection_keys = set(a_keys) & set(b_keys)
+            in_b_but_not_a_keys = set(b_keys) - set(a_keys)
 
-        # set first table dictionary
-        merged_dict = ops_dicts.pop(-1)
+            # update ops in a with information from b
+            for key in intersection_keys:
+                a_inner_dict = a.get(key, None)
+                b_inner_dict = b.get(key, None)
+                merged_inner_keys = set(a_inner_dict.keys()).union(set(b_inner_dict.keys()))
+
+                for inner_key in merged_inner_keys:
+                    a[key][inner_key] = (a_inner_dict.get(inner_key) or b_inner_dict.get(inner_key))
+
+            # add ops to a that are in b but not in a
+            for key in in_b_but_not_a_keys:
+                a[key] = b[key]
+
+            # read multiple tables
+
+        ops_dicts = [self.read_markdown_table(table) for table in self.table_locations]
+        # if not table paths are provide, create the tables for all supported_devices
+        if not ops_dicts:
+            ops_dicts = [self.read_markdown_table(create_tables=device)
+                         for device in self.supported_devices]
+        merged_dict = {}
         for ops_dict in ops_dicts:
-            for ops_name, value in ops_dict.items():
-                # if ops_name exist -> update
-                # else -> set value
-                if ops_name in merged_dict:
-                    for device in self.supported_devices:
-                        legit_ops = merged_dict[ops_name][device] | value[device]
-                        allowed_types = f'allowed_types_{device}'
-
-                        merged_dict[ops_name][device] = legit_ops
-
-                        # TODO: allowed type change per device?
-                else:
-                    merged_dict[ops_name] = value
-        from IPython import embed
-        embed()
-        return merged_dict
+            merge_nested_dict(merged_dict, ops_dict)
+        self.ops_dict.update(merged_dict)
 
     @staticmethod
-    def print_compare_2_tables(first_table, second_table):
+    def compare_2_tables(OpsTable1, OpsTable2, verbose=False):
         """
         Print the intersection and mutuale exclusive of two markdown tables.
         This method is nice to see if a new tensorflow version comes
@@ -236,11 +236,11 @@ class OpsTable():
         Deleted Parameters:
             other_table (OpsTable): Another instance with readed OpsTable
         """
-        first_table = OpsTable.read_markdown_table(first_table)
-        second_table = OpsTable.read_markdown_table(second_table)
+        first_table = OpsTable1.ops_dict
+        second_table = OpsTable2.ops_dict
 
         first_keys = first_table.keys()
-        second_keys = second_table.table.keys()
+        second_keys = second_table.keys()
         # exclusive or
         or_keys = first_keys ^ second_keys
 
@@ -250,173 +250,27 @@ class OpsTable():
         other_exclusive_ops = sorted(list(second_keys & or_keys))
 
         # print everything in a aligned manner
-        pack = [("Intersection of Ops", same_ops),
+        if verbose:
+            pack = [("Intersection of Ops", same_ops),
                 ("Exclusive to Self", own_exclusive_ops),
                 ("Exclusive to Other", other_exclusive_ops)]
 
-        for header, ops in pack:
-            print(header.center(40, "*"))
-            for op in ops:
-                print(op.center(40))
-            print("".center(40, "-"))
+            for header, ops in pack:
+                print(header.center(40, "*"))
+                for op in ops:
+                    print(op.center(40))
+                print("".center(40, "-"))
+        return same_ops, own_exclusive_ops, other_exclusive_ops
 
 
-class ModelLoader():
-    def __init__(self, model_location):
-        self._model_location = Path(model_location)
+class ModelOpsChecker():
+    # ops are not use by XLA, just placeholder for edges of graph
+    placeholder_ops = ("NoOp", "Placeholder")
 
-        # FLAG set by self.set_flags(*model*)
-        self.is_keras = None
-        self.is_saved_model = None
-        self.is_graph = None
-        self._set_flags(self.model_location)  # set is_FLAGS
-
-    @property
-    def FLAGS(self):
-        return self.is_keras, self.is_saved_model, self.is_graph
-
-    def _set_flags(self, path):
-        """
-        Sets flags for given model. With this it is easier to check if a model is
-        from keras, tf or a graph
-
-        """
-        def _is_keras_model(saved_model_dir) -> bool:
-            # helper function to check if a model is saved by keras API
-            # when this file exists its a keras model
-            p = saved_model_dir / "keras_metadata.pb"
-            return p.exists()
-
-        path = Path(path)
-        if path.is_dir():
-            # saved models are dirs.
-            self.is_saved_model = tf.saved_model.contains_saved_model(str(path))
-            self.is_keras = _is_keras_model(path)
-        else:
-            self.is_graph = str(path).endswith(".pb")
-
-    def check_model_existance(self, path_to_model):
-        # raises errors if path_to_model does no exist, or if this is neither a SavedModel or Graph
-        if not Path(path_to_model).exists():
-            raise ValueError(f"Path {path_to_model} does not exist.")
-
-        if not self.is_saved_model and not self.is_graph:
-            raise Exception(f"""Your chosen directory is neither a SavedModel directory,
-            nor a graph *.pb file . Please check if your path is correct:\n {path_to_model}""")
-
-    @property
-    def model_location(self):
-        return str(self._model_location)
-
-    def load_saved_model(self, path_to_model):
-        """
-        Returns:
-            SavedModel
-        """
-        # if graph is loaded return None for model
-        if self.is_keras:
-            return tf.keras.models.load_model(path_to_model)
-        else:
-            return tf.saved_model.load(path_to_model)
-
-    def load_pb_file(self, path_to_pb, as_graph_def=False) -> tf.compat.v1.GraphDef | tf.Graph:
-        """ Reads *path_to_pb* and returns GraphDef of the graph. This function is used to
-        load frozen graphs. If <as_grapH_def> is True, a graph_def definition is returned.
-        Default is False, thus a loaded Graph is returned.
-
-        Args:
-            path_to_pb (str): Location of the pb file
-
-        Returns:
-            tf.compat.v1.GraphDef: The loaded GraphDef of the path_to_pb
-        """
-        with tf.io.gfile.GFile(path_to_pb, "rb") as f:
-            graph_def = tf.compat.v1.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-        if as_graph_def:
-            return graph_def
-        else:
-            with tf.compat.v1.Graph().as_default() as graph:
-                tf.import_graph_def(graph_def, name="")
-                return graph
-
-    def load_model(self, path_to_model):
-        # check if file exists or is a graph file
-        self.check_model_existance(path_to_model)
-        if self.is_graph:
-            return self.load_pb(path_to_model)
-        elif self.is_saved_model:
-            return self.load_saved_model(path_to_model)
-
-    @staticmethod
-    def convert_pb_2_saved_model(export_dir, graph_pb, input_node_name, output_node_name):
-        import tensorflow as tf
-        from tensorflow.python.saved_model import signature_constants, tag_constants
-
-        export_dir = './test_models/converted_frouzen_graph'
-        graph_pb = '/afs/desy.de/user/w/wiedersb/cmsml/cmsml/to_integrate/tests/test_models/test_freeze_graph.pb'
-
-        builder = tf.compat.v1.saved_model.Builder(export_dir)
-
-        with tf.io.gfile.GFile(graph_pb, "rb") as f:
-            graph_def = tf.compat.v1.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-        sigs = {}
-        with tf.compat.v1.Session(graph=tf.compat.v1.Graph()) as sess:
-            # name="" is important to ensure we don't get spurious prefixing
-            tf.import_graph_def(graph_def, name="")
-            graph = tf.compat.v1.get_default_graph()
-            input_node = graph.get_tensor_by_name("input_0:0")
-            output_node = graph.get_tensor_by_name("Identity:0")
-
-            sigs[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY] = \
-                tf.compat.v1.saved_model.predict_signature_def(
-                {"input": input_node},
-                {"output": output_node})
-
-            builder.add_meta_graph_and_variables(sess,
-                                                 [tag_constants.SERVING],
-                                                 signature_def_map=sigs)
-
-        builder.save()
-
-    def get_ports(saved_model, ports=["inputs, outputs"], *, print_only=False):
-        # Get the signature defs
-        signature_defs = tf.saved_model.get_signature_defs(saved_model)
-        if isinstance(ports, str):
-            ports = (ports,)
-        # Get the input and output tensors
-        tensor_names = {}
-        for port in ports:
-            tensor_name = signature_defs[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY].inputs[port].name
-
-            if print_only:
-                print(f"Your port {port} has following name: \n tensor_name")
-            else:
-                tensor_names[port] = tensor_name
-        return tensor_names
-
-    def extract_graph_from_saved_model(self, serving_key: str) -> tf.compat.v1.Graph:
-        """Extract graph if the model is NOT a keras model.
-
-        Returns:
-            tf.SignatureDef: Inference function if model is a keras model otherwise None
-        """
-        if not self.is_keras_model:
-            inference_func = self.model.signatures[serving_key]
-            # there is a bug for TFV < 2.8 where python garbage collector kills the model
-            # due to having no weak link. This is not a nice solution but it works.
-            inference_func._backref_to_saved_model = self.model
-            self.graph = inference_func
-        else:
-            return None
-
-
-class ModelOpsChecker(ModelLoader):
-
-    def __init__(self, tf_model: str):
+    def __init__(self,
+                model_path: str,
+                serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+                node_def_number=0):
         """
         This class taks as input a SavedModel or pb file and returns all unique operators.
         These unique operators are then matched against their XLA compatiblity.
@@ -426,14 +280,67 @@ class ModelOpsChecker(ModelLoader):
         Args:
             tf_model (str): path to tf.saved_model
         """
-        super().__init__(tf_model)
-        self._model_location = Path(tf_model)
         # None if graph is loaded not Savedmodel
-        self.loaded_model = self.load_model(self.model_location)
+        self.model_path = model_path
+        self.model_type = None
+        self.serving_key = serving_key
+        self.loaded_graph_def = self.load_graph_def(self.model_path, self.serving_key)
+        self.node_def_number = node_def_number
 
-    def get_unique(self, attribute: str, signature: str = None, node_def_number: int = 0) -> set[str, str]:
+    def load_graph_def(self,
+                       model_path,
+                       serving_key=tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY):
+        """Load model from *model_path* and extracts the graph_def.
+        If the model is a SavedModel, *serving_key* needs to pass along.
+
+        Args:
+            model_path (str): Path to SavedModel directory or graph.pb file
+            serving_key (str, Optional): Serving key under which a concrete function is saved, only
+            necessary for SavedModels.
+
+        Returns:
+            TYPE: GraphDef
+
+        Raises:
+            FileNotFoundError: Raised if *model_path* is neither SavedModel nor Graph
+            KeyError: Raised if *serving_key* does not exist in given model
         """
-        Get the attribute of a NodeDef saved unter *signature*. Following options a valid for *attribute*:
+        model_path = Path(model_path)
+        # if model_path is directory try load as saved model
+        if model_path.is_dir() and tf.saved_model.contains_saved_model(str(model_path)):
+            # if keras model try to load as keras model
+            if (model_path / "keras_metadata.pb").exists():
+                loaded_saved_model = tf.keras.models.load_model(str(model_path))
+            else:
+                loaded_saved_model = tf.saved_model.load(str(model_path))
+
+            # extract graph
+            if serving_key not in loaded_saved_model.signatures:
+                error_msg = f"Given serving_key: *{serving_key}* is not in loaded model. "\
+                    f"Signatures of the loaded model are: {list(loaded_saved_model.signatures)}"
+                raise KeyError(error_msg)
+
+            graph_def = loaded_saved_model.signatures[serving_key].graph.as_graph_def()
+            self.model_type = 'saved_model'
+        # else load as graph
+        elif model_path.suffix == '.pb':
+
+            # for frozen graphs only
+            with tf.io.gfile.GFile(str(model_path), "rb") as f:
+                graph_def = tf.compat.v1.GraphDef()
+                graph_def.ParseFromString(f.read())
+                self.model_type = 'graph'
+        else:
+            # raise error if neither a frozehn graph or savedmodel is found
+            error_msg = f"Given path: {model_path} is neither frozen graph, nor SavedModel."
+            raise FileNotFoundError(error_msg)
+        return graph_def
+
+    def _get_unique_attribute(self, graph_def, attribute: str, *, node_def_number: int = 0) -> set[str, str]:
+        """
+        Get the *attribute* of all Nodes in *graph_def*. Valid attributes are for example: 'name' or
+        'ops'. The node_def_number is only necessary for Graph_defs coming from SavedModels.
+        For graph_defs coming from frozen graphs *node_def_number* is not used.
         name: Unique string identifier for the node.
         op: String that specifies the type of operation.
         input: List of strings that specify the input tensors for the node.
@@ -441,8 +348,7 @@ class ModelOpsChecker(ModelLoader):
         attr: Map of attribute names to attribute values. Provide additional information about the op
 
         Args:
-            attribute (str): Description
-            signature (str, optional): Signature within the graph (default: 'serving_default').
+            attribute (str): Name of the attribute within NodeDef to look for (typical: ops or names)
             node_def_number (int, optional): Number of the function def to look up (default: 0)
 
         Returns:
@@ -452,91 +358,99 @@ class ModelOpsChecker(ModelLoader):
             AttributeError: Raises Error if node_def_number exceeds the number of FunctionDefs.
         """
 
-        # set default signature key
-        if signature is None:
-            signature = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY
-
-
-
         # get tf.compat.v1.GraphDef
-
-        graph_def = None
         node_def = None
-        if self.is_saved_model:
-            graph_def = self.loaded_model.signatures[signature].graph.as_graph_def()
-        elif self.is_graph:
-            graph_def = self.load_pb_file(self.model_location, as_graph_def=True)
-
         # extract tf.compat.v1.NodeDef from GraphDef.
-        try:
-            node_def = graph_def.library.function[node_def_number].node_def
-        except:
-            # raise error when wrong function library is taken.
-            num_funcs = len(graph_def.library.function[node_def_number])
-            if num_funcs > 1:
-                msg = f"You have {num_funcs} FunctionDef's. Change your node_def_number to another value"
-                raise AttributeError(msg)
-
-        unique_attributs = {getattr(node, attribute) for node in node_def}
+        if self.model_type == 'saved_model':
+            try:
+                node_def = graph_def.library.function[node_def_number].node_def
+            except:
+                # raise error when wrong function library is taken.
+                num_funcs = len(graph_def.library.function[node_def_number])
+                if num_funcs > 1:
+                    msg = f"You have {num_funcs} FunctionDef's."\
+                        f" Change your node_def_number to another between 0 and {num_funcs}"
+                    raise AttributeError(msg)
+            unique_attributs = {getattr(node, attribute) for node in node_def}
+        else:
+            # frozen graphs have no proper saving of their ops in a node_def
+            # ops and names need to be extracted from protobuffer
+            unique_attributs = {getattr(node, attribute) for node in graph_def.node}
         return unique_attributs
 
-    def get_unique_names(self, signature: str = "serving_default",
-                         node_def_number: int = 0) -> set[str, str]:
+    @property
+    def unique_names(self) -> set[str, str]:
         """
-        Returns a set of all node_names in a graph saved under signature within a tf.saved_model
-
+        Return set of all names of all used ops within loaded Model
         """
-        return self.get_unique("name", signature, node_def_number)
+        return self._get_unique_attribute(self.loaded_graph_def, "name", node_def_number=self.node_def_number)
 
-    def get_unique_ops(self, signature: str = "serving_default",
-                    node_def_number: int = 0) -> set[str, str]:
-        return self.get_unique("op", signature, node_def_number)
+    @property
+    def unique_ops(self) -> set[str, str]:
+        """
+        Return set of all ops used within loaded Model
+        """
+        return self._get_unique_attribute(self.loaded_graph_def, "op", node_def_number=self.node_def_number)
 
-    def find_match(self, signature: str, table_path: str,
-                device: str, node_def_number: int = 0) -> list[str, bool]:
-        # get unique ops from graph
-        ops_in_graph = self.get_unique_ops(signature, node_def_number)
+    def find_match(self, table_paths: str = None,
+                device: str = "cpu") -> list[str, bool]:
+        ops_table = OpsTable(table_paths)
 
         # get uniqure ops from table
-        comptabile_ops_table = OpsTable.read_markdown_table(table_path)
-        ops_in_table = OpsTable.get_unique_ops(table=comptabile_ops_table, device=device)
+        if device.lower() == "cpu":
+            unique_table_ops = ops_table.cpu_ops
+        elif device.lower() == "gpu":
+            unique_table_ops = ops_table.gpu_ops
+        else:
+            msg = f"Your device {device} is not supported."\
+                f"Current supported devices are: {ops_table.supported_devices}"
+            raise ValueError(msg)
 
-        # compare and check if op is in deed compatible
-        compatible_ops_list = [(ops, ops in ops_in_table) for ops in ops_in_graph]
-        return compatible_ops_list
+        # check if graph ops match with table ops
+        # result is list with tuples(ops_name, bool)
+        graph_ops = self.unique_ops
+        compatible_ops_collection = {(graph_op, graph_op in unique_table_ops)
+                               for graph_op in graph_ops
+                               if graph_op not in self.placeholder_ops}
 
-    def print_compatible_ops(self, signature: str, table_path: str, device, print_uncompatible_ops=False):
-        compatible_list = self.find_match(signature, table_path, device)
-        header = ("Operartion", "has XLA")
+        return compatible_ops_collection
+
+    def print_compatible_ops(self, table_path: str, device, print_uncompatible_ops: bool = False):
+        """
+
+        """
+
+        compatible_set = self.find_match(table_path, device)
+        header = ("Operation", "has XLA")
 
         print(f"{device.upper().center(40)}")
         print(f"{header[0]:20}|{header[1]:5}")
         print("-" * 20 + "|" + "-" * 20)
-        for op, status in compatible_list:
+        for op, status in compatible_set:
             print(f"{op:20}|{str(bool(status)):5}")
 
         # check if any are not compatible
         if print_uncompatible_ops:
-            uncompatible = [op for op, status in compatible_list if not status]
-            print(f"You have following uncompatible ops:", *uncompatible, sep="\n")
+            uncompatible = [op for op, status in compatible_set if not status]
+            if uncompatible:
+                print("\nFollowing ops are not XLA compatible:", *uncompatible, sep="\n")
+            else:
+                print("\nAll ops are XLA compatible")
 
 
 if __name__ == "__main__":
-    # path_table = "./compat_ops_tables/2_6_4_XLA_CPU_JIT.txt"
-    gpu_path_table = "./compat_ops_tables/XLA_GPU_JIT_old.txt"
-    cpu_path_table = "./compat_ops_tables/XLA_CPU_JIT_old.txt"
+    path_table = "tests/compat_ops_tables/2_6_4_XLA_CPU_JIT.txt"
+    gpu_path_table = "tests/compat_ops_tables/XLA_GPU_JIT_old.txt"
+    cpu_path_table = "tests/compat_ops_tables/XLA_CPU_JIT_old.txt"
 
     # gpu_table = OpsTable(gpu_path_table)
     # cpu_table = OpsTable(cpu_path_table)
-    b_table = OpsTable(gpu_path_table, cpu_path_table)
+    t = OpsTable(cpu_path_table, gpu_path_table)
 
-    base = "/afs/desy.de/user/w/wiedersb/cmsml/cmsml/to_integrate/tests/test_models/"
-    feed_forward_models = {"graph": base + "test_freeze_graph.pb",
-                           "keras": base + "test_keras_model", "tf2": base + "test_saved_model"}
-    # lstm_path = "/afs/desy.de/user/w/wiedersb/CMSSW_12_4_0/src/PerfTests/aot_convert/hhbtag_lstm/models/saved_model_HHbtag_v1_par_0_static"
+    model_saved_path = "tests/test_models/test_saved_model"
+    model_graph_path = "tests/test_models/test_freeze_graph.pb"
 
-    ff_net = ModelOpsChecker(feed_forward_models["keras"])
-    # lstm_net = ModelOpsChecker(lstm_path)
-
+    tf_check = ModelOpsChecker(model_saved_path)
+    graph_check = ModelOpsChecker(model_graph_path)
     from IPython import embed
     embed()

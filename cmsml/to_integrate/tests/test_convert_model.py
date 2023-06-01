@@ -94,7 +94,7 @@ class TestConvertModel(unittest.TestCase):
 
         self.assertEqual(tf_static_spec, should_be_static_spec)
 
-    def test__static_signatures_function(self):
+    def test__create_static_signatures(self):
         # concrete functions between keras and tensorflow
         # should have the same inputs/outputs with static batch size
 
