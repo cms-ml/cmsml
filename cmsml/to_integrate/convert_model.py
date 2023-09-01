@@ -1,13 +1,17 @@
+# coding: utf-8
+
 from __future__ import annotations
-from pathlib import Path
-import tensorflow as tf
+
+
 import os
-from typing import Sequence, Union
+from pathlib import Path
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+import tensorflow as tf
 
-class ModelConverter():
+
+class ModelConverter(object):
 
     def __init__(self,
                  src_dir: str,
@@ -42,7 +46,7 @@ class ModelConverter():
         self.signatures = None  # the static signatures, after the extration
 
     @staticmethod
-    def _pretty_color(string: str, color: str = "white") -> str:
+    def colored(s: str, color: str = "white") -> str:
         """Helper function to create colored strings for get better readability
 
         Args:
@@ -52,10 +56,7 @@ class ModelConverter():
         Returns:
             str: String with color coding at start and end.
         """
-        START = "\033["
-        RESET = f"{START}0m"
-
-        COLORS = {
+        color = {
             "black": "90",
             "red": "91",
             "green": "92",
@@ -63,20 +64,21 @@ class ModelConverter():
             "blue": "94",
             "magenta": "95",
             "white": "97",
-        }
-        return "".join((START, COLORS.get(color, "97"), "m", string, RESET))
+        }.get(color, "97")
+
+        return "\033[{}m{}\033[0m".format(color, s)
 
     @staticmethod
     def _print_success(string: str):
-        print(ModelConverter._pretty_color(string, "green"))
+        print(ModelConverter.colored(string, "green"))
 
     @staticmethod
     def _print_notation(string: str):
-        print(ModelConverter._pretty_color(string, "yellow"))
+        print(ModelConverter.colored(string, "yellow"))
 
     @staticmethod
     def _print_warning(string: str):
-        print(ModelConverter._pretty_color(string, "red"))
+        print(ModelConverter.colored(string, "red"))
 
     def _check_paths(self, src: str, dst: str) -> tuple(Path, Path):
         """Helper function to prepare src and dst paths and provide proper error messages.
@@ -110,7 +112,7 @@ class ModelConverter():
                 raise ValueError(f"Directory: {str(path)} does not contain a tensorflow saved_model")
             return path
 
-        def parse_dst(src: Union[str, Path], dst: Union[str, Path]) -> Path:
+        def parse_dst(src: str | Path, dst: str | Path) -> Path:
             """Helper function to append dst with default name and preventing overwriting the source model
 
             Args:
@@ -184,7 +186,7 @@ class ModelConverter():
         """
         model_path = str(self.src)
         self._print_notation(f"Load model: {model_path}")
-        with tf.device('/cpu:0'):
+        with tf.device("/cpu:0"):
             if self.is_keras_model:
                 name = "Keras"
                 model = tf.keras.models.load_model(model_path)
@@ -218,8 +220,7 @@ class ModelConverter():
 
             # shapes first element is always the batch size
             shape[0] = batch_size
-            new_name = "_".join(
-                ("batch_size", str(batch_size), input_layer.name))
+            new_name = f"bs{batch_size}_{input_layer.name}"
 
             # tensorflows default naming scheme with ":" are problematic in the name argument
             new_name = new_name.replace(":", "_")
@@ -258,7 +259,7 @@ class ModelConverter():
         self._print_notation(f"Start saving signatures at {str(self.dst)}:")
         tf.saved_model.save(self.model, str(self.dst),
                             signatures=self.signatures)
-        print_saving_dir = self._pretty_color(str(self.dst), "red")
+        print_saving_dir = self.colored(str(self.dst), "red")
         self._print_success(f"Saved the model with static signatures at: {print_saving_dir}")
 
     def save_static_graph(self):
@@ -278,62 +279,51 @@ class ModelConverter():
         return graph
 
 
-def main(src_dir: str,
-         dst_dir: str = "",
-         batch_sizes: str = "1",
-         serving_key: str = "serving_default"):
-
-    converter = ModelConverter(src_dir=src_dir,
-                               dst_dir=dst_dir,
-                               serving_key=serving_key,
-                               batch_sizes=batch_sizes)
-    converter.save_static_graph()
+def main(
+    src: str,
+    dst: str = "",
+    batch_sizes: tuple[int] = (1,),
+    serving_key: str = "serving_default",
+):
+    ModelConverter(
+        src_dir=src,
+        dst_dir=dst,
+        batch_sizes=batch_sizes,
+        serving_key=serving_key,
+    ).save_static_graph()
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="""
-                    Tool to prepare Tensorflow model for AOT compilation.
-                    This will tak an tensorflow SavedModel and set batch size dimension to a static
-                    value. These static concrete functions arethen saved in a .pb file under the keyword
-                    "batch_size_N", with N being your given batch size
-                    """,
-                                    prog="Prog")
+    parser = argparse.ArgumentParser(
+        description="convert TensorFlow models to an AOT compatible format",
+        prog="cmsml_convert_aot",
+    )
 
-    parser.add_argument("--src",
-                        help="""Path of the tensorflow saved model dir.""",
-                        type=str,
-                        required=True,
-                        dest="src_dir")
-
-    parser.add_argument("--dst",
-                        help="""Destination path of the resulting static saved model. Defaults to "".
-                        This will saved the graphin the same directory as the source, only appending
-                        "_static"
-                        """,
-                        type=str,
-                        required=True,
-                        dest="dst_dir")
-
-    parser.add_argument("--serving_key",
-                        help="""
-                        A *.pb file can habit multiple graphs, each with its own unique serving_key.
-                        The default is "serving_default". """,
-                        type=str,
-                        default="serving_default",
-                        required=False,
-                        dest="serving_key")
-
-    parser.add_argument("-b",
-                        "--batch_sizes",
-                        help=""" Pass a string with ints using spaces as delimiter, e.g. "1 2 4"
-                        will create a model with static batch sizes 1 2 and 4.
-                        This sets the suffix of the serving key under which the mode is saved.
-                        From our example the model with batch size 1 has the key: batch_size_1.^""",
-                        type=str,
-                        required=True,
-                        dest="batch_sizes")
+    parser.add_argument(
+        "--src",
+        required=True,
+        help="path of the tensorFlow saved model directory",
+    )
+    parser.add_argument(
+        "--dst",
+        required=True,
+        help="output path for the converted model",
+    )
+    parser.add_argument(
+        "--batch-sizes",
+        "-b",
+        default=(1,),
+        type=(lambda s: tuple(map(int, s.strip().split(",")))),
+        help="comma-separated list of batch sizes to convert the model for; default: 1",
+    )
+    parser.add_argument(
+        "--serving-key",
+        "-k",
+        default="serving_default",
+        help="serving key of the model in --src; default: serving_default",
+    )
 
     args = parser.parse_args()
     main(**args.__dict__)
