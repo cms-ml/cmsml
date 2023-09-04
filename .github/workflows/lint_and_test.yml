@@ -22,15 +22,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         versions:
           # scan python versions
-          - {tag: "3.6", tf: ""}
-          - {tag: "3.7", tf: ""}
-          - {tag: "3.8", tf: ""}
-          - {tag: "3.9", tf: ""}
-          - {tag: "3.10", tf: ""}
-          - {tag: "3.11", tf: ""}
+          - {tag: "3.6", tf: "default"}
+          - {tag: "3.7", tf: "default"}
+          - {tag: "3.8", tf: "default"}
+          - {tag: "3.9", tf: "default"}
+          - {tag: "3.10", tf: "default"}
+          - {tag: "3.11", tf: "default"}
           # scan tf versions
           - {tag: "3.9_base", tf: "2.5.3"}
           - {tag: "3.9_base", tf: "2.6.5"}
@@ -48,4 +49,4 @@ jobs:
         run: docker pull cmsml/cmsml:${{ matrix.versions.tag }}
 
       - name: Test 🎰
-        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.versions.tag }} "[ -z '${{ matrix.versions.tf }}' ] || pip install -U tensorflow=='${{ matrix.versions.tf }}'; python -m unittest tests"
+        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.versions.tag }} "[ '${{ matrix.versions.tf }}' = 'default' ] || pip install -U tensorflow=='${{ matrix.versions.tf }}'; python -m unittest tests"

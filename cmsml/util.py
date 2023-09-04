@@ -15,7 +15,7 @@ import shutil
 import tempfile
 import contextlib
 import importlib
-from collections import MappingView
+from collections.abc import MappingView
 from types import GeneratorType, ModuleType
 from typing import Any
 
