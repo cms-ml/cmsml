@@ -82,6 +82,8 @@ setup(
     entry_points={
         "console_scripts": [
             "cmsml_open_tf_graph = cmsml.scripts.open_tf_graph:main",
+            "cmsml_compile_tf_graph = cmsml.scripts.compile_tf_graph:main",
+            "cmsml_check_aot_compatibility = cmsml.scripts.check_aot_compatibility:main",
         ],
     },
     zip_safe=False,

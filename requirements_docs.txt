@@ -1,4 +1,5 @@
-six>=1.13
+-r requirements.txt
+
 sphinx
 sphinx-rtd-theme
 autodocsumm
