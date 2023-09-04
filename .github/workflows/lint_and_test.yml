@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           persist-credentials: false
 
@@ -23,11 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        tag: [3.7", "3.8", "3.9", "3.10", "3.11"]
     name: test (python ${{ matrix.tag }})
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
         with:
           persist-credentials: false
 
