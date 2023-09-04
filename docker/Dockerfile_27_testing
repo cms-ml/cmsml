@@ -1,3 +1,0 @@
-FROM cmsml/cmsml:2.7
-
-# extended software stack for testing

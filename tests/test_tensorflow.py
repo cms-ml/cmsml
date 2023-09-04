@@ -71,11 +71,14 @@ class TensorFlowTestCase(CMSMLTestCase):
         if tf is None:
             return None
 
-        return tf.Session(graph=graph, config=tf.ConfigProto(
-            intra_op_parallelism_threads=1,
-            inter_op_parallelism_threads=1,
-            device_count={"GPU": 0},
-        ))
+        return tf.Session(
+            graph=graph,
+            config=tf.ConfigProto(
+                intra_op_parallelism_threads=1,
+                inter_op_parallelism_threads=1,
+                device_count={"GPU": 0},
+            ),
+        )
 
     def create_tf1_graph(self, create_session=True):
         tf = self.tf1
@@ -241,8 +244,11 @@ class TensorFlowTestCase(CMSMLTestCase):
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, self.tf1.keras.backend.get_session(),
-                variables_to_constants=False)
+            cmsml.tensorflow.save_graph(
+                path,
+                self.tf1.keras.backend.get_session(),
+                variables_to_constants=False,
+            )
             self.assertTrue(os.path.exists(path))
 
     def test_save_keras_model_v2(self):
@@ -288,8 +294,12 @@ class TensorFlowTestCase(CMSMLTestCase):
 
         _, session = self.create_tf1_graph()
         with tmp_file(suffix=".pb.txt") as path:
-            cmsml.tensorflow.save_graph(path, session, variables_to_constants=True,
-                output_names=["output"])
+            cmsml.tensorflow.save_graph(
+                path,
+                session,
+                variables_to_constants=True,
+                output_names=["output"],
+            )
             graph = cmsml.tensorflow.load_graph(path)
 
         session = self.create_tf1_session(graph)

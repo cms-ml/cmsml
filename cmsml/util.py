@@ -4,64 +4,66 @@
 Helpful functions and utilities.
 """
 
+from __future__ import annotations
+
 __all__ = [
-    "is_lazy_iterable", "make_list", "tmp_file", "tmp_dir",
+    "is_lazy_iterable", "make_list", "tmp_file", "tmp_dir", "MockModule",
 ]
 
-
 import os
-import sys
 import shutil
 import tempfile
 import contextlib
-import types
 import importlib
-
-import six
+from collections.abc import MappingView
+from types import GeneratorType, ModuleType
+from typing import Any
 
 
 lazy_iter_types = (
-    types.GeneratorType,
-    six.moves.collections_abc.MappingView,
-    six.moves.range,
-    six.moves.map,
+    GeneratorType,
+    MappingView,
+    range,
+    map,
     enumerate,
 )
 
 
-def is_lazy_iterable(obj):
+def is_lazy_iterable(obj: Any) -> bool:
     """
     Returns whether *obj* is iterable lazily, such as generators, range objects, maps, etc.
     """
     return isinstance(obj, lazy_iter_types)
 
 
-def make_list(obj, cast=True):
+def make_list(obj: Any, cast: bool = True) -> list[Any]:
     """
     Converts an object *obj* to a list and returns it. Objects of types *tuple* and *set* are
     converted if *cast* is *True*. Otherwise, and for all other types, *obj* is put in a new list.
     """
     if isinstance(obj, list):
         return list(obj)
-    elif is_lazy_iterable(obj):
+    if is_lazy_iterable(obj):
         return list(obj)
-    elif isinstance(obj, (tuple, set)) and cast:
+    if isinstance(obj, (tuple, set)) and cast:
         return list(obj)
-    else:
-        return [obj]
+    return [obj]
 
 
-def verbose_import(module_name, user=None, package=None, pip_name=None):
+def verbose_import(
+    module_name: str,
+    user: str | None = None,
+    package: str | None = None,
+    pip_name: str | None = None,
+) -> ModuleType:
     try:
         return importlib.import_module(module_name, package=package)
-    except ImportError:
-        e_type, e, traceback = sys.exc_info()
-        msg = str(e)
+    except ImportError as e:
         if user:
-            msg += " but is required by {}".format(user)
+            e.msg += f" but is required by {user}"
         if pip_name:
-            msg += " (you may want to try 'pip install --user {}')".format(pip_name)
-        six.reraise(e_type, e_type(msg), traceback)
+            e.msg += f" (you may want to try 'pip install --user {pip_name}')"
+        raise e
 
 
 @contextlib.contextmanager
@@ -106,3 +108,46 @@ def tmp_dir(create=True, delete=True, **kwargs):
     finally:
         if delete and os.path.exists(path):
             shutil.rmtree(path)
+
+
+class MockModule(object):
+    """
+    Mockup object that resembles a module with arbitrarily deep structure such that, e.g.,
+
+    .. code-block:: python
+
+        tf = MockModule("tensorflow")
+        print(tf.Graph)
+        # -> "<MockupModule 'tf' at 0x981jald1>"
+
+    will always succeed at declaration.
+
+    .. py:attribute:: _name
+       type: str
+
+       The name of the mock module.
+    """
+
+    def __init__(self, name: str):
+        super().__init__()
+
+        self._name = name
+
+    def __getattr__(self, attr: str) -> "MockModule":
+        return type(self)(f"{self._name}.{attr}")
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} '{self._name}' at {hex(id(self))}>"
+
+    def __call__(self, *args, **kwargs) -> None:
+        raise Exception(f"{self._name} is a mock module and cannot be called")
+
+    def __nonzero__(self) -> bool:
+        return False
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __or__(self, other) -> Any:
+        # forward union type hints
+        return type(self) | other

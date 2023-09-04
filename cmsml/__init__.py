@@ -7,7 +7,6 @@ Main package file containing provisioning imports.
 
 __all__ = ["__version__"]
 
-
 # provisioning imports
 from cmsml.__meta__ import __version__
 import cmsml.util
