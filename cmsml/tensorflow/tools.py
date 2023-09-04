@@ -289,11 +289,7 @@ def write_graph_summary(
 
         # write the graph
         with writer.as_default():
-            # the graph summary op requires a step argument prior to 2.7
-            graph_kwargs = {}
-            if tf_version[1] <= 6:
-                graph_kwargs["step"] = 0
-            summary_ops.graph(graph.as_graph_def(), **graph_kwargs)
+            summary_ops.graph(graph.as_graph_def())
 
         # close
         writer.close()
