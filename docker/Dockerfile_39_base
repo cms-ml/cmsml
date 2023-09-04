@@ -1,0 +1,15 @@
+FROM python:3.9
+
+# set the workdir
+WORKDIR /root
+
+# minimal software stack
+RUN apt-get update; apt-get clean
+RUN apt-get install -y nano less htop git; apt-get clean
+
+# python software stack
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade ipython
+
+# initial command
+CMD ["bash", "-i", "-l"]

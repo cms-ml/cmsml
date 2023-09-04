@@ -1,4 +1,0 @@
-FROM cmsml/cmsml:3.10
-
-# extended software stack for testing
-RUN pip install --no-cache-dir nvidia_smi py3nvml

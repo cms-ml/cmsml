@@ -98,7 +98,7 @@ def save_graph(
     (v2).
     """
     tf, tf1, tf_version = import_tf()
-    path = os.path.expandvars(os.path.expanduser(path))
+    path = os.path.expandvars(os.path.expanduser(str(path)))
     graph_dir, graph_name = os.path.split(path)
 
     # default as_text value
@@ -176,9 +176,9 @@ def save_graph(
 
 def load_graph(
     path: str,
-    create_session: bool = False,
+    create_session: bool | None = None,
     session_kwargs: dict | None = None,
-    as_text: bool = False,
+    as_text: bool | None = None,
 ) -> tf.Graph | tuple[tf.Graph, tf.Session]:
     """
     Reads a saved TensorFlow graph from *path* and returns it. When *create_session* is *True*,
@@ -197,7 +197,7 @@ def load_graph(
         graph, session = load_graph("path/to/model.pb", create_session=True)
     """
     tf, tf1, tf_version = import_tf()
-    path = os.path.expandvars(os.path.expanduser(path))
+    path = os.path.expandvars(os.path.expanduser(str(path)))
 
     # default create_session value
     if create_session is None:
