@@ -4,8 +4,11 @@
 Custom keras callbacks.
 """
 
+from __future__ import annotations
+
 __all__ = []
 
+from typing import Any
 
 from cmsml.util import make_list, verbose_import
 
@@ -48,16 +51,17 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
         stats = make_list(kwargs.pop("stats", self.AVAILABLE_STATS))
 
         # make device_numbers unique
-        device_numbers = list(sorted(set(device_numbers), key=lambda n: device_numbers.index(n)))
+        device_numbers = sorted(set(device_numbers), key=device_numbers.index)
 
         # validate stat
         for s in stats:
             if s not in self.AVAILABLE_STATS:
-                raise ValueError("unknown GPU stats '{}', valid values are: {}".format(
-                    s, ", ".join(self.AVAILABLE_STATS)))
+                raise ValueError(
+                    f"unknown GPU stats '{s}', valid values are: {', '.join(self.AVAILABLE_STATS)}",
+                )
 
         # super init
-        super(GPUStatsLogger, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # store configs
         self.device_numbers = device_numbers
@@ -71,7 +75,7 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
         # get device handles
         self.handles = [self.smi.nvmlDeviceGetHandleByIndex(n) for n in self.device_numbers]
 
-    def _log_usage(self, logs):
+    def _log_usage(self, logs: dict[str, Any]) -> None:
         # nothing to do when no stats should be shown
         if not self.stats:
             return
@@ -88,20 +92,20 @@ class GPUStatsLogger(tf.keras.callbacks.Callback):
             # add stats to logs in the configured order
             for s in self.stats:
                 if s == "util":
-                    data.append(("gpu{} util".format(n), util.gpu, "%"))
+                    data.append((f"gpu{n} util", util.gpu, "%"))
                 elif s == "mem":
-                    data.append(("gpu{} mem".format(n), mem.used / 1024**2., "MiB"))
+                    data.append((f"gpu{n} mem", mem.used / 1024**2., "MiB"))
                 elif s == "mem_rel":
-                    data.append(("gpu{} mem".format(n), 100 * mem.used / mem.total, "%"))
+                    data.append((f"gpu{n} mem", 100 * mem.used / mem.total, "%"))
 
         # add all of them to the logs with units added to keys
-        logs.update({"{}/{}".format(k, u): v for k, v, u in data})
+        logs.update({f"{k}/{u}": v for k, v, u in data})
 
         # print the stats line
         stats_line = ", ".join("{}: {:.1f}{}".format(*d) for d in data)
         print("\nGPU stats --- " + stats_line)
 
-    def on_epoch_end(self, i, logs=None):
+    def on_epoch_end(self, i: int, logs: dict[str, Any] | None = None) -> None:
         """
         Logs the GPU stats after each epoch *i* and stores them in *logs* when set.
         """

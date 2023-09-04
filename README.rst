@@ -56,7 +56,7 @@ The tests can be triggered with
 
    python -m unittest tests
 
-and in general, they should be run for Python 2.7, 3.7 and 3.8. To run tests in a docker container, do
+and in general, they should be run for Python 3.6 to 3.11. To run tests in a docker container, do
 
 .. code-block:: shell
 

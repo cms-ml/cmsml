@@ -8,6 +8,5 @@ If not mentioned otherwise, all objects are based on tf.keras rather than plain 
 
 __all__ = ["GPUStatsLogger"]
 
-
 # provisioning imports
 from cmsml.keras.callbacks import GPUStatsLogger

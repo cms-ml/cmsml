@@ -4,13 +4,18 @@
 TensorFlow tools.
 """
 
+from __future__ import annotations
+
 __all__ = []
 
-
 import os
+from types import ModuleType
+from typing import Any
 
-import six
+from cmsml.util import MockModule
 
+
+tf = MockModule("tensorflow")
 
 tf_cpp_log_levels = {
     "DEBUG": 0,
@@ -20,7 +25,10 @@ tf_cpp_log_levels = {
 }
 
 
-def import_tf(log_level="WARNING", autograph_verbosity=3):
+def import_tf(
+    log_level: int | str = "WARNING",
+    autograph_verbosity: int = 3,
+) -> tuple[ModuleType, ModuleType | None, tuple[int]]:
     """
     Imports TensorFlow and returns a 3-tuple containing the module itself, the v1 compatibility
     API (i.e. the TensorFlow module itself if v1 is the primarily installed version), and the
@@ -61,7 +69,14 @@ def import_tf(log_level="WARNING", autograph_verbosity=3):
     return tf, tf1, tf_version
 
 
-def save_graph(path, obj, variables_to_constants=False, output_names=None, *args, **kwargs):
+def save_graph(
+    path: str,
+    obj: Any,
+    variables_to_constants: bool = False,
+    output_names: list[str] | None = None,
+    *args,
+    **kwargs,
+) -> None:
     """
     Extracts a TensorFlow graph from an object *obj* and saves it at *path*. The graph is optionally
     transformed into a simpler representation with all its variables converted to constants when
@@ -100,14 +115,17 @@ def save_graph(path, obj, variables_to_constants=False, output_names=None, *args
             tf.keras.backend.set_learning_phase(False)
             model_func = saving_utils.trace_model_call(obj)
             if model_func.function_spec.arg_names and not model_func.input_signature:
-                raise ValueError("when obj is a keras model callable accepting arguments, its "
-                    "input signature must be frozen by building the model")
+                raise ValueError(
+                    "when obj is a keras model callable accepting arguments, its "
+                    "input signature must be frozen by building the model",
+                )
             obj = model_func.get_concrete_function()
             tf.keras.backend.set_learning_phase(learning_phase_orig)
 
         elif isinstance(obj, Function):
             if obj.function_spec.arg_names and not obj.input_signature:
-                raise ValueError("when obj is a polymorphic function accepting arguments, its "
+                raise ValueError(
+                    "when obj is a polymorphic function accepting arguments, its ",
                     "input signature must be frozen")
             obj = obj.get_concrete_function()
 
@@ -115,22 +133,31 @@ def save_graph(path, obj, variables_to_constants=False, output_names=None, *args
     if variables_to_constants:
         if tf1 and isinstance(obj, tf1.Session):
             if not output_names:
-                raise ValueError("when variables_to_constants is true, output_names must "
-                    "contain operations to export, got '{}' instead".format(output_names))
-            obj = tf1.graph_util.convert_variables_to_constants(obj, obj.graph.as_graph_def(),
-                output_names)
+                raise ValueError(
+                    "when variables_to_constants is true, output_names must "
+                    f"contain operations to export, got '{output_names}' instead",
+                )
+            obj = tf1.graph_util.convert_variables_to_constants(
+                obj,
+                obj.graph.as_graph_def(),
+                output_names,
+            )
 
         elif tf_version[0] != "1":
             from tensorflow.python.framework import convert_to_constants
 
             if not isinstance(obj, ConcreteFunction):
-                raise TypeError("when variables_to_constants is true, obj must be a concrete "
-                    "or polymorphic function, got '{}' instead".format(obj))
+                raise TypeError(
+                    "when variables_to_constants is true, obj must be a concrete "
+                    f"or polymorphic function, got '{obj}' instead",
+                )
             obj = convert_to_constants.convert_variables_to_constants_v2(obj)
 
         else:
-            raise TypeError("cannot convert variables to constants for object '{}', type not "
-                "understood for TensorFlow version {}".format(obj, tf.__version__))
+            raise TypeError(
+                f"cannot convert variables to constants for object '{obj}', type not "
+                f"understood for TensorFlow version {tf.__version__}",
+            )
 
     # extract the graph
     if tf1 and isinstance(obj, tf1.Session):
@@ -142,12 +169,17 @@ def save_graph(path, obj, variables_to_constants=False, output_names=None, *args
 
     # write it
     if tf_version[0] == "1":
-        return tf1.train.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
+        tf1.train.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
     else:
-        return tf.io.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
+        tf.io.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
 
 
-def load_graph(path, create_session=None, session_kwargs=None, as_text=None):
+def load_graph(
+    path: str,
+    create_session: bool = False,
+    session_kwargs: dict | None = None,
+    as_text: bool = False,
+) -> tf.Graph | tuple[tf.Graph, tf.Session]:
     """
     Reads a saved TensorFlow graph from *path* and returns it. When *create_session* is *True*,
     a session object (compatible with the v1 API) is created and returned as the second value of
@@ -171,8 +203,10 @@ def load_graph(path, create_session=None, session_kwargs=None, as_text=None):
     if create_session is None:
         create_session = tf_version[0] == "1"
     if create_session and not tf1:
-        raise NotImplementedError("the v1 compatibility layer of TensorFlow v2 is missing, "
-            "but required by when create_session is True")
+        raise NotImplementedError(
+            "the v1 compatibility layer of TensorFlow v2 is missing, "
+            "but required by when create_session is True",
+        )
 
     # default as_text value
     if as_text is None:
@@ -208,7 +242,11 @@ def load_graph(path, create_session=None, session_kwargs=None, as_text=None):
         return graph
 
 
-def write_graph_summary(graph, summary_dir, **kwargs):
+def write_graph_summary(
+    graph: tf.Graph,
+    summary_dir: str,
+    **kwargs,
+) -> None:
     """
     Writes the summary of a *graph* to a directory *summary_dir* using a ``tf.summary.FileWriter``
     (v1) or ``tf.summary.create_file_writer`` (v2). This summary can be used later on to visualize
@@ -224,7 +262,7 @@ def write_graph_summary(graph, summary_dir, **kwargs):
         os.makedirs(summary_dir)
 
     # read the graph when a string is passed
-    if isinstance(graph, six.string_types):
+    if isinstance(graph, str):
         graph = load_graph(graph, create_session=False, **kwargs)
 
     # further handling is version dependent

@@ -1,7 +1,6 @@
-FROM cmsml/cmsml:3.8
+FROM cmsml/cmsml:3.9
 
 # python software stack
-Run pip install --no-cache-dir six
 RUN pip install --no-cache-dir sphinx
 RUN pip install --no-cache-dir sphinx-rtd-theme
 RUN pip install --no-cache-dir autodocsumm
