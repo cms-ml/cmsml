@@ -17,6 +17,46 @@ on:
         default: 'false'
 
 jobs:
+  py36:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_36
+          repository: cmsml/cmsml
+          tags: "3.6"
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  py36_testing:
+    needs: py36
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_testing != 'true' && github.event.inputs.skip_push != 'true' }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_36_testing
+          repository: cmsml/cmsml
+          tags: 3.6_testing
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
   py37:
     runs-on: ubuntu-latest
     steps:
