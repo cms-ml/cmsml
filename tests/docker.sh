@@ -2,7 +2,7 @@
 
 # Script to run all tests in a docker image.
 # Arguments:
-#   1. The docker image, defaults to "cmsml/cmsml:latest_testing".
+#   1. The docker image, defaults to "cmsml/cmsml".
 #   2. The test command. When just "i", an interactive bash is started instead of running the tests
 #      and exiting. Defaults to "python -m unittest tests".
 
@@ -11,7 +11,7 @@ action() {
     local this_dir="$( cd "$( dirname "${this_file}" )" && pwd )"
     local repo_dir="$( cd "$( dirname "${this_dir}" )" && pwd )"
 
-    local image="${1:-cmsml/cmsml:latest_testing}"
+    local image="${1:-cmsml/cmsml}"
     local cmd="${@:2}"
     cmd="${cmd:-python -m unittest tests}"
 

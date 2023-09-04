@@ -32,7 +32,7 @@ def import_tf(
     """
     Imports TensorFlow and returns a 3-tuple containing the module itself, the v1 compatibility
     API (i.e. the TensorFlow module itself if v1 is the primarily installed version), and the
-    package version as a 3-tuple containing strings. Example:
+    package version as a 3-tuple containing integers. Example:
 
     .. code-block:: python
 
@@ -57,11 +57,11 @@ def import_tf(
         tf.autograph.set_verbosity(autograph_verbosity)
 
     # split the version into three parts
-    tf_version = tf.__version__.split(".", 2)
+    tf_version = tuple(map(int, tf.__version__.split(".", 2)))
 
     # keep a reference to the v1 API as long as v2 provides compatibility
     tf1 = None
-    if tf_version[0] == "1":
+    if tf_version[0] == 1:
         tf1 = tf
     elif getattr(tf, "compat", None) and getattr(tf.compat, "v1", None):
         tf1 = tf.compat.v1
@@ -105,7 +105,7 @@ def save_graph(
     kwargs.setdefault("as_text", path.endswith((".pbtxt", ".pb.txt")))
 
     # convert keras models and polymorphic functions to concrete functions, v2 only
-    if tf_version[0] != "1":
+    if tf_version[0] != 1:
         from tensorflow.python.keras.saving import saving_utils
         from tensorflow.python.eager.def_function import Function
         from tensorflow.python.eager.function import ConcreteFunction
@@ -143,7 +143,7 @@ def save_graph(
                 output_names,
             )
 
-        elif tf_version[0] != "1":
+        elif tf_version[0] != 1:
             from tensorflow.python.framework import convert_to_constants
 
             if not isinstance(obj, ConcreteFunction):
@@ -162,13 +162,13 @@ def save_graph(
     # extract the graph
     if tf1 and isinstance(obj, tf1.Session):
         graph = obj.graph
-    elif tf_version[0] != "1" and isinstance(obj, ConcreteFunction):
+    elif tf_version[0] != 1 and isinstance(obj, ConcreteFunction):
         graph = obj.graph
     else:
         graph = obj
 
     # write it
-    if tf_version[0] == "1":
+    if tf_version[0] == 1:
         tf1.train.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
     else:
         tf.io.write_graph(graph, graph_dir, graph_name, *args, **kwargs)
@@ -201,7 +201,7 @@ def load_graph(
 
     # default create_session value
     if create_session is None:
-        create_session = tf_version[0] == "1"
+        create_session = tf_version[0] == 1
     if create_session and not tf1:
         raise NotImplementedError(
             "the v1 compatibility layer of TensorFlow v2 is missing, "
@@ -224,7 +224,7 @@ def load_graph(
 
         else:
             # use the gfile api depending on the TF version
-            if tf_version[0] == "1":
+            if tf_version[0] == 1:
                 from tensorflow.python.platform import gfile
                 with gfile.FastGFile(path, "rb") as f:
                     graph_def.ParseFromString(f.read())
@@ -267,7 +267,7 @@ def write_graph_summary(
 
     # further handling is version dependent
     tf, tf1, tf_version = import_tf()
-    if tf_version[0] == "1":
+    if tf_version[0] == 1:
         # switch to non-eager mode for the FileWriter to work
         eager = getattr(tf1, "executing_eagerly", lambda: False)()
         if eager:
@@ -289,9 +289,9 @@ def write_graph_summary(
 
         # write the graph
         with writer.as_default():
-            # the graph summary op requires a step argument prior to 2.5
+            # the graph summary op requires a step argument prior to 2.7
             graph_kwargs = {}
-            if tf_version[1] < "5":
+            if tf_version[1] <= 6:
                 graph_kwargs["step"] = 0
             summary_ops.graph(graph.as_graph_def(), **graph_kwargs)
 
