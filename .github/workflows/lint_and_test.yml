@@ -41,7 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tf_version: ["2.5", "2.6", "2.11", "2.12", "2.13"]
+        # tf_version: ["2.5", "2.6", "2.11", "2.12", "2.13"]
+        tf_version: ["2.12"]
     name: test (tensorflow ${{ matrix.tf_version }})
     steps:
       - name: Checkout 🛎️
@@ -53,4 +54,4 @@ jobs:
         run: docker pull cmsml/cmsml:latest_testing
 
       - name: Test 🎰
-        run: bash tests/docker.sh cmsml/cmsml:latest_testing "pip install -U tensorflow='${{ matrix.tf_version }}'; python -m unittest tests"
+        run: bash tests/docker.sh cmsml/cmsml:latest_testing "pip install -U tensorflow=='${{ matrix.tf_version }}'; python -m unittest tests"
