@@ -19,35 +19,25 @@ jobs:
       - name: Lint 🔍
         run: bash tests/docker.sh cmsml/cmsml:latest_testing tests/lint.sh
 
-  # test_python:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       tag: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
-  #   name: test (python ${{ matrix.tag }})
-  #   steps:
-  #     - name: Checkout 🛎️
-  #       uses: actions/checkout@v3
-  #       with:
-  #         persist-credentials: false
-
-  #     - name: Pull docker image 🐳
-  #       run: docker pull cmsml/cmsml:${{ matrix.tag }}_testing
-
-  #     - name: Test 🎰
-  #       run: bash tests/docker.sh cmsml/cmsml:${{ matrix.tag }}_testing
-
-  test_tensorflow:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         versions:
-          - {tf: "2.5.3", tag: "3.9"}
-          - {tf: "2.6.5", tag: "3.9"}
-          # - {tf: "2.11.1", tag: "3.9"}
-          # - {tf: "2.12.1", tag: "3.9"}
-          # - {tf: "2.13.0", tag: "3.9"}
-    name: test (tensorflow ${{ matrix.versions.tf }})
+          # scan python versions
+          # - {py: "3.6", tf: ""}
+          # - {py: "3.7", tf: ""}
+          # - {py: "3.8", tf: ""}
+          # - {py: "3.9", tf: ""}
+          # - {py: "3.10", tf: ""}
+          # - {py: "3.11", tf: ""}
+          # scan tf versions
+          - {py: "3.9", tf: "2.5"}
+          # - {py: "3.9", tf: "2.6"}
+          # - {py: "3.9", tf: "2.11"}
+          # - {py: "3.9", tf: "2.12"}
+          # - {py: "3.9", tf: "2.13"}
+    name: test (py ${{ matrix.versions.py }}, tf ${{ matrix.versions.tf }})
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
@@ -55,7 +45,7 @@ jobs:
           persist-credentials: false
 
       - name: Pull docker image 🐳
-        run: docker pull cmsml/cmsml:${{ matrix.versions.tag }}_testing
+        run: docker pull cmsml/cmsml:${{ matrix.versions.py }}_testing
 
       - name: Test 🎰
-        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.versions.tag }}_testing "pip install -U tensorflow=='${{ matrix.versions.tf }}'; python -m unittest tests"
+        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.versions.py }}_testing "[ -z '${{ matrix.versions.tf }}' ] || pip install -U tensorflow=='${{ matrix.versions.tf }}'; python -m unittest tests"
