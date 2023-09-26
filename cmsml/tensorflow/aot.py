@@ -35,12 +35,7 @@ class OpsData(object):
 
     def __init__(self, devices: tuple[str] | None = None):
         """
-        Args:
-            paths (tuple[str] | OpsTable): tuple of locations of multiple tables or OpsTables
-            create_tables (tuple[str], optional): Description
-
-        Deleted Parameters:
-            table_dir (str): Path to the markdown table
+        Sets an iterable of *devices* for which the XLA operations table should be generate.
         """
         super().__init__()
 
@@ -67,16 +62,7 @@ class OpsData(object):
         device: str = "cpu",
     ) -> str:
         """
-        Creates table stream containing all XLA supported ops for given *device*.
-        You need to be in the CMSSW software enviroment to run this command.
-        The table is saved at *dst*/<current_tensorflow_version>.*suffix*
-
-        Args:
-            device (str, optional): cpu or gpu (default: cpu)
-            path (str, optional): destination of resulting file
-            suffix (str, optional): any suffix (default: .md)
-
-        Returns: stream (str): String of markdown table
+        Generate a markdown table for *device* and returns it.
         """
         cls._assert_device_supported(device)
 
@@ -97,13 +83,10 @@ class OpsData(object):
         device: str = "cpu",
     ) -> dict[str, dict]:
         """
-        Read a *markdown_table* created with 'tf2xla_supported_ops' and returns a dictionary.
-
-        Args:
-            path (str): location of the markdown file
-
-        Returns:
-            dict: dictionary of ops with allowed types
+        Read a given markdown-*table* generated with 'tf2xla_supported_ops' and returns a dictionary
+        contaning all ops with XLA implementation.
+        For a given table the *device* information is ignored and extracted from the table.
+        If not table is given one will be generate for given *device*.
         """
         cls._assert_device_supported(device)
 
@@ -242,9 +225,10 @@ class OpsData(object):
 def load_graph_def(
     model_path: str,
     serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
-) -> object:  # TODO: proper type
+) -> tf.compat.v1.GraphDef:
     """
-    TODO: docs
+    Loads the model under *model_path* and returns the GraphDef of it.
+    Support is given for either tensorflow or keras SavedModel, as well as for frozen graphs.
 
     TODO: merge this with existing function in tools.py?
     """
@@ -253,10 +237,8 @@ def load_graph_def(
     # if model_path is directory try load as saved model
     if os.path.isdir(model_path) and tf.saved_model.contains_saved_model(model_path):
         # if keras model try to load as keras model
-        if os.path.exists(os.path.join(model_path, "keras_metadata.pb")):
-            loaded_saved_model = tf.keras.models.load_model(model_path)
-        else:
-            loaded_saved_model = tf.saved_model.load(model_path)
+        # else load as tensorflow saved model
+        loaded_saved_model = load_model(model_path)
 
         # extract graph
         if serving_key not in loaded_saved_model.signatures:
@@ -280,7 +262,8 @@ def load_graph_def(
 
 def load_model(model_path: str) -> tf.Model:
     """
-    TODO.
+    Load and return the SavedModel stored in the directory *model_path*.
+    If the model was saved using Keras API, it will be loaded using the same API, otherwise TensorFlows SavedModel API is used.
     """
     model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
 
@@ -294,11 +277,13 @@ def load_model(model_path: str) -> tf.Model:
 
 def get_graph_ops(graph_def: object, node_def_number: int = 0) -> list[str]:
     """
-    TODO.
+    Reads *graph_def* and extracts all ops from the 'GraphDef'.
+    If there are multiple 'FunctionDef' instances in the GraphDef, set *node_def_number* to specify
+    from which GraphDef the ops will be extracted.
     """
     node_def = graph_def.node
 
-    # when the node definitin is missing, try to extract it from the graph "library"
+    # when the node definition is missing, try to extract it from the graph "library"
     if not node_def:
         num_funcs = len(graph_def.library.function)
         if node_def_number + 1 > num_funcs:
