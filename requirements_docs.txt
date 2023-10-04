@@ -1,6 +1,0 @@
--r requirements.txt
-
-sphinx
-sphinx-rtd-theme
-autodocsumm
-tensorflow

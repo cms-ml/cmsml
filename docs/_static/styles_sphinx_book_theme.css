@@ -1,0 +1,5 @@
+/* sphinx_book_theme styles */
+
+footer .footer-item:first-child {
+    display: none !important;
+}
