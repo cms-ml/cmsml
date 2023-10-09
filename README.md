@@ -20,6 +20,7 @@
   <a href="http://cmsml.readthedocs.io">
     <img alt="Documentation status" src="https://readthedocs.org/projects/cmsml/badge/?version=latest" />
   </a>
+  <img alt="Python version" src="https://img.shields.io/badge/Python-%E2%89%A53.7-blue" />
   <a href="https://pypi.python.org/pypi/cmsml">
     <img alt="Package version" src="https://img.shields.io/pypi/v/cmsml.svg?style=flat" />
   </a>
