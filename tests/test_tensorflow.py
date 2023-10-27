@@ -159,7 +159,9 @@ class TensorFlowTestCase(CMSMLTestCase):
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_frozen_graph(path, graph.as_graph_def(), variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(
+                path, graph.as_graph_def(), variables_to_constants=False,
+            )
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
