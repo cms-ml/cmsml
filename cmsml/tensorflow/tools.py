@@ -9,6 +9,7 @@ from __future__ import annotations
 __all__ = []
 
 import os
+import warnings
 from types import ModuleType
 from typing import Any
 
@@ -70,6 +71,31 @@ def import_tf(
 
 
 def save_graph(
+    path: str,
+    obj: Any,
+    variables_to_constants: bool = False,
+    output_names: list[str] | None = None,
+    *args,
+    **kwargs,
+) -> None:
+    """
+    Deprecated. Please use :py:func:`save_frozen_graph`.
+    """
+    warnings.warn(
+        "save_graph() is deprecated, please use save_frozen_graph() instead",
+        DeprecationWarning,
+    )
+    return save_frozen_graph(
+        path,
+        obj,
+        variables_to_constants=variables_to_constants,
+        output_names=output_names,
+        *args,
+        **kwargs  # noqa
+    )
+
+
+def save_frozen_graph(
     path: str,
     obj: Any,
     variables_to_constants: bool = False,
@@ -181,6 +207,27 @@ def load_graph(
     as_text: bool | None = None,
 ) -> tf.Graph | tuple[tf.Graph, tf.Session]:
     """
+    Deprecated. Please use :py:func:`load_frozen_graph`.
+    """
+    warnings.warn(
+        "load_graph() is deprecated, please use load_frozen_graph() instead",
+        DeprecationWarning,
+    )
+    return load_frozen_graph(
+        path=path,
+        create_session=create_session,
+        session_kwargs=session_kwargs,
+        as_text=as_text,
+    )
+
+
+def load_frozen_graph(
+    path: str,
+    create_session: bool | None = None,
+    session_kwargs: dict | None = None,
+    as_text: bool | None = None,
+) -> tf.Graph | tuple[tf.Graph, tf.Session]:
+    """
     Reads a saved TensorFlow graph from *path* and returns it. When *create_session* is *True*,
     a session object (compatible with the v1 API) is created and returned as the second value of
     a 2-tuple. The default value of *create_session* is *True* when TensorFlow v1 is detected,
@@ -192,9 +239,9 @@ def load_graph(
 
     .. code-block:: python
 
-        graph = load_graph("path/to/model.pb", create_session=False)
+        graph = load_frozen_graph("path/to/model.pb", create_session=False)
 
-        graph, session = load_graph("path/to/model.pb", create_session=True)
+        graph, session = load_frozen_graph("path/to/model.pb", create_session=True)
     """
     tf, tf1, tf_version = import_tf()
     path = os.path.expandvars(os.path.expanduser(str(path)))
@@ -251,7 +298,7 @@ def write_graph_summary(
     Writes the summary of a *graph* to a directory *summary_dir* using a ``tf.summary.FileWriter``
     (v1) or ``tf.summary.create_file_writer`` (v2). This summary can be used later on to visualize
     the graph via tensorboard. *graph* can be either a graph object or a path to a protobuf file. In
-    the latter case, :py:func:`load_graph` is used and all *kwargs* are forwarded.
+    the latter case, :py:func:`load_frozen_graph` is used and all *kwargs* are forwarded.
 
     .. note::
         When used with TensorFlow v1, eager mode must be disabled.
@@ -263,7 +310,7 @@ def write_graph_summary(
 
     # read the graph when a string is passed
     if isinstance(graph, str):
-        graph = load_graph(graph, create_session=False, **kwargs)
+        graph = load_frozen_graph(graph, create_session=False, **kwargs)
 
     # further handling is version dependent
     tf, tf1, tf_version = import_tf()
