@@ -208,6 +208,63 @@ def load_graph(path, create_session=None, session_kwargs=None, as_text=None):
         return graph
 
 
+def load_graph_def(
+    model_path: str,
+    serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+) -> GraphDef:
+    """
+    Loads the model under *model_path* and returns the GraphDef of it.
+    Support is given for either tensorflow or keras SavedModel, as well as for frozen graphs.
+
+    TODO: merge this with existing function in tools.py?
+    """
+    tf, tf1, tf_version = import_tf()
+
+    model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
+
+    # if model_path is directory try load as saved model
+    if os.path.isdir(model_path) and tf.saved_model.contains_saved_model(model_path):
+        # if keras model try to load as keras model
+        # else load as tensorflow saved model
+        loaded_saved_model = load_model(model_path)
+
+        # extract graph
+        if serving_key not in loaded_saved_model.signatures:
+            raise KeyError(
+                f"no graph with serving key '{serving_key}' in model, "
+                f"existing keys: {', '.join(list(loaded_saved_model.signatures))}",
+            )
+        # loaded_saved_model.signatures[serving_key].function_def.node_def
+        return loaded_saved_model.signatures[serving_key].graph.as_graph_def()
+
+    # load as frozen graph
+    if os.path.splitext(model_path)[1] == ".pb":  # pb.txt pbtxt?? TODO
+        with tf.io.gfile.GFile(str(model_path), "rb") as f:
+            graph_def = tf.compat.v1.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+        return graph_def
+
+    raise FileNotFoundError(f"{model_path} contains neither frozen graph nor SavedModel")
+
+
+def load_model(model_path: str) -> tf.Model:
+    """
+    Load and return the SavedModel stored in the directory *model_path*.
+    If the model was saved using Keras API, it will be loaded using the same API, otherwise TensorFlows SavedModel API is used.
+    """
+    tf, tf1, tf_version = import_tf()
+
+    model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
+
+    if os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, "keras_metadata.pb")):
+        model = tf.keras.models.load_model(model_path)
+    else:
+        model = tf.saved_model.load(model_path)
+
+    return model
+
+
 def write_graph_summary(graph, summary_dir, **kwargs):
     """
     Writes the summary of a *graph* to a directory *summary_dir* using a ``tf.summary.FileWriter``
