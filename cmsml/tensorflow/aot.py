@@ -14,8 +14,11 @@ from subprocess import PIPE
 from cmsml.util import interruptable_popen
 from cmsml.tensorflow.tools import import_tf
 
-
 tf = import_tf()[0]
+
+import tensorflow.core
+
+GraphDef = tensorflow.core.framework.graph_pb2.GraphDef
 
 
 class OpsData(object):
@@ -86,13 +89,16 @@ class OpsData(object):
         Read a given markdown-*table* generated with 'tf2xla_supported_ops' and returns a dictionary
         contaning all ops with XLA implementation.
         For a given table the *device* information is ignored and extracted from the table.
-        If not table is given one will be generate for given *device*.
+        If no table is given one will be generate for given *device*.
         """
         cls._assert_device_supported(device)
 
         # create the table if empty
         if not table:
             table = cls.read_ops_table(device)
+        else:
+            with open(table, "r") as txt_file:
+                table = table.read()
 
         # split into lines
         lines = table.splitlines()
@@ -222,60 +228,7 @@ class OpsData(object):
         return self._ops.get(*args, **kwargs)
 
 
-def load_graph_def(
-    model_path: str,
-    serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
-) -> tf.compat.v1.GraphDef:
-    """
-    Loads the model under *model_path* and returns the GraphDef of it.
-    Support is given for either tensorflow or keras SavedModel, as well as for frozen graphs.
-
-    TODO: merge this with existing function in tools.py?
-    """
-    model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
-
-    # if model_path is directory try load as saved model
-    if os.path.isdir(model_path) and tf.saved_model.contains_saved_model(model_path):
-        # if keras model try to load as keras model
-        # else load as tensorflow saved model
-        loaded_saved_model = load_model(model_path)
-
-        # extract graph
-        if serving_key not in loaded_saved_model.signatures:
-            raise KeyError(
-                f"no graph with serving key '{serving_key}' in model, "
-                f"existing keys: {', '.join(list(loaded_saved_model.signatures))}",
-            )
-
-        return loaded_saved_model.signatures[serving_key].graph.as_graph_def()
-
-    # load as frozen graph
-    if os.path.splitext(model_path)[1] == ".pb":  # pb.txt pbtxt?? TODO
-        with tf.io.gfile.GFile(str(model_path), "rb") as f:
-            graph_def = tf.compat.v1.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-        return graph_def
-
-    raise FileNotFoundError(f"{model_path} contains neither frozen graph nor SavedModel")
-
-
-def load_model(model_path: str) -> tf.Model:
-    """
-    Load and return the SavedModel stored in the directory *model_path*.
-    If the model was saved using Keras API, it will be loaded using the same API, otherwise TensorFlows SavedModel API is used.
-    """
-    model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
-
-    if os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, "keras_metadata.pb")):
-        model = tf.keras.models.load_model(model_path)
-    else:
-        model = tf.saved_model.load(model_path)
-
-    return model
-
-
-def get_graph_ops(graph_def: object, node_def_number: int = 0) -> list[str]:
+def get_graph_ops(graph_def: GraphDef, node_def_number: int = 0) -> list[str]:
     """
     Reads *graph_def* and extracts all ops from the 'GraphDef'.
     If there are multiple 'FunctionDef' instances in the GraphDef, set *node_def_number* to specify
