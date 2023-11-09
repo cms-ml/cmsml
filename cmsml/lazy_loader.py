@@ -19,10 +19,12 @@ available in the user environment. The lazy loading mechanism thus imports the a
 on first access.
 """
 
+from __future__ import annotations
+
 __all__ = []
 
-
 import importlib
+from typing import Any
 
 import cmsml
 
@@ -30,11 +32,11 @@ import cmsml
 _lazy_modules = None
 
 
-def started():
+def started() -> bool:
     return _lazy_modules is not None
 
 
-def start(module_names):
+def start(module_names: list[str]) -> None:
     global _lazy_modules
 
     # make sure to only start once
@@ -50,19 +52,19 @@ def start(module_names):
 
 class ModulePlaceholder(object):
 
-    def __init__(self, module_name):
-        super(ModulePlaceholder, self).__init__()
+    def __init__(self, module_name: str):
+        super().__init__()
 
         self.module_name = module_name
 
         # add to the cmsml module dict
         cmsml.__dict__.setdefault(self.module_name, self)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         # when this placeholder is still in the cmsml module dict,
         # import the actual module and replace it
         if cmsml.__dict__.get(self.module_name) in (None, self):
-            module = importlib.import_module("cmsml." + self.module_name)
+            module = importlib.import_module(f"cmsml.{self.module_name}")
             cmsml.__dict__[self.module_name] = module
 
         # return the proper attribute which is most likely only required for the first call

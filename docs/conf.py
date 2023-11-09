@@ -30,27 +30,21 @@ exclude_patterns = []
 pygments_style = "sphinx"
 add_module_names = False
 
-html_title = project + " Documentation"
+html_title = "{} v{}".format(project, version)
 html_logo = "../logo.png"
-html_sidebars = {"**": [
-    "about.html",
-    "localtoc.html",
-    "searchbox.html",
-]}
-html_theme = "sphinx_rtd_theme"
-html_theme_options = {}
-if html_theme == "sphinx_rtd_theme":
-    html_theme_options.update({
-        "logo_only": True,
-        "prev_next_buttons_location": None,
-        "collapse_navigation": False,
-    })
-elif html_theme == "alabaster":
-    html_theme_options.update({
-        "github_user": "cms-ml",
-        "github_repo": "cmsml",
-        "travis_button": True,
-    })
+html_theme = "sphinx_book_theme"
+html_theme_options = {
+    "home_page_in_toc": True,
+    "show_navbar_depth": 2,
+    "show_toc_level": 2,
+    "repository_url": "https://github.com/cms-ml/cmsml",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "use_edit_page_button": True,
+}
+html_context = {
+    "default_mode": "light",
+}
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -58,6 +52,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
     "autodocsumm",
+    "myst_parser",
+    "sphinx_lfs_content",
     "pydomain_patch",
 ]
 
@@ -67,6 +63,4 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 
 def setup(app):
-    app.add_css_file("styles_common.css")
-    if html_theme in ("sphinx_rtd_theme", "alabaster"):
-        app.add_css_file("styles_{}.css".format(html_theme))
+    app.add_css_file("styles_sphinx_book_theme.css")

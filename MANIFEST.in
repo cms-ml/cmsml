@@ -1,3 +1,3 @@
 graft cmsml
-include setup.py requirements.txt requirements_docs.txt README.rst LICENSE .flake8
-global-exclude *.py[cod] __pycache__
+include requirements.txt requirements_dev.txt README.md LICENSE .flake8
+global-exclude tests/* *.py[cod] __pycache__

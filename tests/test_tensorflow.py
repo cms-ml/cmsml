@@ -72,11 +72,14 @@ class TensorFlowTestCase(CMSMLTestCase):
         if tf is None:
             return None
 
-        return tf.Session(graph=graph, config=tf.ConfigProto(
-            intra_op_parallelism_threads=1,
-            inter_op_parallelism_threads=1,
-            device_count={"GPU": 0},
-        ))
+        return tf.Session(
+            graph=graph,
+            config=tf.ConfigProto(
+                intra_op_parallelism_threads=1,
+                inter_op_parallelism_threads=1,
+                device_count={"GPU": 0},
+            ),
+        )
 
     def create_tf1_graph(self, create_session=True):
         tf = self.tf1
@@ -143,35 +146,37 @@ class TensorFlowTestCase(CMSMLTestCase):
         if tf_version[0] == "1":
             self.assertEqual(tf, tf1)
 
-    def test_save_graph(self):
+    def test_save_frozen_graph(self):
         graph, session = self.create_tf1_graph()
         if graph is None or session is None:
             return
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, graph, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, graph, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb.txt") as path:
-            cmsml.tensorflow.save_graph(path, graph, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, graph, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, graph.as_graph_def(), variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(
+                path, graph.as_graph_def(), variables_to_constants=False,
+            )
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, session, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, session, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, session, variables_to_constants=True,
+            cmsml.tensorflow.save_frozen_graph(path, session, variables_to_constants=True,
                 output_names=["output"])
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
             with self.assertRaises(ValueError):
-                cmsml.tensorflow.save_graph(path, session, variables_to_constants=True)
+                cmsml.tensorflow.save_frozen_graph(path, session, variables_to_constants=True)
             self.assertFalse(os.path.exists(path))
 
     def test_save_polymorphic_function_error(self):
@@ -179,108 +184,111 @@ class TensorFlowTestCase(CMSMLTestCase):
 
         with self.assertRaises(ValueError):
             with tmp_file(suffix=".pb") as path:
-                cmsml.tensorflow.save_graph(path, poly_func, variables_to_constants=False)
+                cmsml.tensorflow.save_frozen_graph(path, poly_func, variables_to_constants=False)
 
         with self.assertRaises(ValueError):
             with tmp_file(suffix=".pb") as path:
-                cmsml.tensorflow.save_graph(path, poly_func, variables_to_constants=True)
+                cmsml.tensorflow.save_frozen_graph(path, poly_func, variables_to_constants=True)
 
     def test_save_empty_polymorphic_function(self):
         empty_poly_func = self.create_tf_function(no_input=True)
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, empty_poly_func, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, empty_poly_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, empty_poly_func, variables_to_constants=True)
+            cmsml.tensorflow.save_frozen_graph(path, empty_poly_func, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
 
     def test_save_frozen_polymorphic_function(self):
         frozen_poly_func = self.create_tf_function(frozen=True)
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, frozen_poly_func, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, frozen_poly_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb.txt") as path:
-            cmsml.tensorflow.save_graph(path, frozen_poly_func, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, frozen_poly_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, frozen_poly_func, variables_to_constants=True)
+            cmsml.tensorflow.save_frozen_graph(path, frozen_poly_func, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
 
     def test_save_concrete_function(self):
         concrete_func = self.create_tf_function(concrete=True)
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, concrete_func, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, concrete_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb.txt") as path:
-            cmsml.tensorflow.save_graph(path, concrete_func, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, concrete_func, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, concrete_func, variables_to_constants=True)
+            cmsml.tensorflow.save_frozen_graph(path, concrete_func, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
 
     def test_save_keras_model_v1(self):
         model = self.create_keras_model(self.tf1)
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, model, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, model, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb.txt") as path:
-            cmsml.tensorflow.save_graph(path, model, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, model, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, model, variables_to_constants=True)
+            cmsml.tensorflow.save_frozen_graph(path, model, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, self.tf1.keras.backend.get_session(),
-                variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(
+                path,
+                self.tf1.keras.backend.get_session(),
+                variables_to_constants=False,
+            )
             self.assertTrue(os.path.exists(path))
 
     def test_save_keras_model_v2(self):
         model = self.create_keras_model(self.tf)
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, model, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path, model, variables_to_constants=False)
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_graph(path, model, variables_to_constants=True)
+            cmsml.tensorflow.save_frozen_graph(path, model, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
 
-    def test_load_graph(self):
+    def test_load_frozen_graph(self):
         import google.protobuf as pb
 
         concrete_func = self.create_tf_function(concrete=True)
 
         with tmp_file(suffix=".pb") as path_pb, tmp_file(suffix=".pb.txt") as path_txt:
-            cmsml.tensorflow.save_graph(path_txt, concrete_func, variables_to_constants=True)
-            cmsml.tensorflow.save_graph(path_pb, concrete_func, variables_to_constants=False)
+            cmsml.tensorflow.save_frozen_graph(path_txt, concrete_func, variables_to_constants=True)
+            cmsml.tensorflow.save_frozen_graph(path_pb, concrete_func, variables_to_constants=False)
 
             self.assertTrue(os.path.exists(path_pb))
             self.assertTrue(os.path.exists(path_txt))
 
-            graph = cmsml.tensorflow.load_graph(path_txt)
+            graph = cmsml.tensorflow.load_frozen_graph(path_txt)
             self.assertIsInstance(graph, self.tf.Graph)
 
-            graph = cmsml.tensorflow.load_graph(path_pb)
+            graph = cmsml.tensorflow.load_frozen_graph(path_pb)
             self.assertIsInstance(graph, self.tf.Graph)
 
             with self.assertRaises(pb.text_format.ParseError):
-                cmsml.tensorflow.load_graph(path_pb, as_text=True)
+                cmsml.tensorflow.load_frozen_graph(path_pb, as_text=True)
             with self.assertRaises(pb.message.DecodeError):
-                cmsml.tensorflow.load_graph(path_txt, as_text=False)
+                cmsml.tensorflow.load_frozen_graph(path_txt, as_text=False)
 
-    def test_load_graph_and_run(self):
+    def test_load_frozen_graph_and_run(self):
         import numpy as np
 
         tf = self.tf1
@@ -289,9 +297,13 @@ class TensorFlowTestCase(CMSMLTestCase):
 
         _, session = self.create_tf1_graph()
         with tmp_file(suffix=".pb.txt") as path:
-            cmsml.tensorflow.save_graph(path, session, variables_to_constants=True,
-                output_names=["output"])
-            graph = cmsml.tensorflow.load_graph(path)
+            cmsml.tensorflow.save_frozen_graph(
+                path,
+                session,
+                variables_to_constants=True,
+                output_names=["output"],
+            )
+            graph = cmsml.tensorflow.load_frozen_graph(path)
 
         session = self.create_tf1_session(graph)
         with graph.as_default():
@@ -311,7 +323,7 @@ class TensorFlowTestCase(CMSMLTestCase):
             self.assertGreater(len(os.listdir(path)), 0)
 
         with tmp_file(suffix=".pb") as graph_path:
-            cmsml.tensorflow.save_graph(graph_path, concrete_func)
+            cmsml.tensorflow.save_frozen_graph(graph_path, concrete_func)
             with tmp_dir(create=False) as path:
                 cmsml.tensorflow.write_graph_summary(graph_path, path)
                 self.assertTrue(os.path.exists(path))

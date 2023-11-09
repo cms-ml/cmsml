@@ -16,16 +16,39 @@ import argparse
 def main():
     from cmsml.tensorflow import write_graph_summary
 
-    parser = argparse.ArgumentParser(prog="cmsml_open_tf_graph", description="Takes a tensorflow "
-        "graph that was previously saved to a protobuf file and opens a tensorboard server to "
-        "visualize it.")
-    parser.add_argument("graph_path", help="the path to the graph to open")
-    parser.add_argument("--log-dir", "-l", help="the tensorboard logdir, temporary when not set")
-    parser.add_argument("--txt", "-t", action="store_true", help="force reading the graph as text")
-    parser.add_argument("--binary", "-b", action="store_true", help="force reading the graph as a "
-        "binary")
-    parser.add_argument("--tensorboard-args", "-a", help="optional arguments to pass to the "
-        "tensorboard command")
+    parser = argparse.ArgumentParser(
+        prog="cmsml_open_tf_graph",
+        description="Takes a TensorFlow graph that was previously saved to a protobuf file and "
+        "opens a tensorboard server to visualize it",
+    )
+
+    parser.add_argument(
+        "graph_path",
+        help="the path to the graph to open",
+    )
+    parser.add_argument(
+        "--log-dir",
+        "-l",
+        help="the tensorboard logdir, temporary when not set",
+    )
+    parser.add_argument(
+        "--txt",
+        "-t",
+        action="store_true",
+        help="force reading the graph as text",
+    )
+    parser.add_argument(
+        "--binary",
+        "-b",
+        action="store_true",
+        help="force reading the graph as a binary",
+    )
+    parser.add_argument(
+        "--tensorboard-args",
+        "-a",
+        help="optional arguments to pass to the tensorboard command",
+    )
+
     args = parser.parse_args()
 
     # prepare the log_dir
@@ -47,12 +70,12 @@ def main():
     write_graph_summary(args.graph_path, log_dir, as_text=as_text)
 
     # build the command
-    cmd = "tensorboard --logdir '{}'".format(log_dir)
+    cmd = f"tensorboard --logdir '{log_dir}'"
     if args.tensorboard_args:
         cmd += " " + args.tensorboard_args
 
     # start the tensorboard process
-    print("starting tensorboard with command: {}".format(cmd))
+    print(f"starting tensorboard with command: {cmd}")
     p = subprocess.Popen(cmd, shell=True, executable="/bin/bash", preexec_fn=os.setsid)
     try:
         p.communicate()

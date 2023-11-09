@@ -1,5 +1,10 @@
-.. include:: ../README.rst
-   :end-before: marker-after-header
+**cmsml**
+=========
+
+.. include:: ../README.md
+   :parser: myst_parser.sphinx_
+   :start-after: <!-- marker-after-logo -->
+   :end-before: <!-- marker-after-header -->
 
 
 Table of contents
@@ -12,6 +17,7 @@ Table of contents
    api/index
 
 
-.. include:: ../README.rst
-   :start-after: marker-after-header
-   :end-before: marker-after-content
+.. include:: ../README.md
+   :parser: myst_parser.sphinx_
+   :start-after: <!-- marker-before-body -->
+   :end-before: <!-- marker-after-body -->
