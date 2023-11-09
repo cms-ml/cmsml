@@ -334,7 +334,7 @@ class TensorFlowTestCase(CMSMLTestCase):
     def create_saved_model(self, **kwargs):
         # helper function to create, save
 
-        model = self.create_keras_model(self.tf2)
+        model = self.create_keras_model(self.tf)
 
         with tmp_dir(create=False) as keras_path, tmp_dir(create=False) as tf_path:
             self.tf2.saved_model.save(model, tf_path)
@@ -355,10 +355,10 @@ class TensorFlowTestCase(CMSMLTestCase):
 
 
     def test_load_graph_def(self):
-        keras_path, tf_path = self.create_saved_model()
+        with self.create_saved_model() as paths:
+            keras_path, tf_path = paths
+            tf_graph_def  = cmsml.tensorflow.load_graph_def(tf_path, self.tf2.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY )
+            keras_graph_def  = cmsml.tensorflow.load_graph_def(keras_path,self.tf2.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
 
-        tf_graph_def  = cmsml.tensorflow.load_graph_def(tf_path, self.tf2.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY )
-        keras_graph_def  = cmsml.tensorflow.load_graph_def(keras_path,self.tf2.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
-
-        self.assertTrue(isinstance(tf_graph_def, self.tf2.compat.v1.GraphDef))
-        self.assertTrue(isinstance(keras_graph_def, self.tf2.compat.v1.GraphDef))
+            self.assertTrue(isinstance(tf_graph_def, self.tf2.compat.v1.GraphDef))
+            self.assertTrue(isinstance(keras_graph_def, self.tf2.compat.v1.GraphDef))
