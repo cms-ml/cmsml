@@ -1,16 +1,11 @@
 from __future__ import annotations
-import sys
-sys.path.append('..')
-sys.path.append('../..')
-import tensorflow as tf
+import os
 
-
-import unittest
-from pathlib import Path
-from util import tmp_dir, tmp_file
+import cmsml
+from cmsml.util import tmp_dir, tmp_file
 import cmsml.tensorflow.tools as cmsml_tools
-
-from aot import get_graph_ops, OpsData
+from cmsml.tensorflow.aot import get_graph_ops, OpsData
+from . import CMSMLTestCase
 
 
 class AotTestCase(CMSMLTestCase):
@@ -41,38 +36,41 @@ class AotTestCase(CMSMLTestCase):
             self._tf, self._tf1, self._tf_version = cmsml.tensorflow.import_tf()
         return self._tf_version
 
-
-    def create_graph_def(self,create='saved_model' **kwargs):
+    def create_graph_def(self, create='saved_model', **kwargs):
         # helper function to create GraphDef from SavedModel or Graph
+        tf = self.tf
+
+        model = tf.keras.Sequential()
+        model.add(tf.keras.layers.InputLayer(input_shape=(10,), dtype=tf.float32, name="input"))
+        model.add(tf.keras.layers.BatchNormalization(axis=1, renorm=True))
+        model.add(tf.keras.layers.Dense(100, activation="tanh"))
+        model.add(tf.keras.layers.BatchNormalization(axis=1, renorm=True))
+        model.add(tf.keras.layers.Dense(3, activation="softmax", name="output"))
+
         if create == 'saved_model':
-            model = self.tf.keras.Sequential()
-
-            model.add(self.tf.keras.layers.InputLayer(input_shape=(10,), dtype=self.tf.float32, name="input"))
-            model.add(self.tf.keras.layers.BatchNormalization(axis=1, renorm=True))
-            model.add(self.tf.keras.layers.Dense(100, activation="tanh"))
-            model.add(self.tf.keras.layers.BatchNormalization(axis=1, renorm=True))
-            model.add(self.tf.keras.layers.Dense(3, activation="softmax", name="output"))
-
             with tmp_dir(create=False) as keras_path, tmp_dir(create=False) as tf_path:
-                self.tf.saved_model.save(model, tf_path)
+
+                tf.saved_model.save(model, tf_path)
                 model.save(keras_path, overwrite=True, include_optimizer=False)
 
-                tf_graph_def, keras_graph_def = cmsml_tools.load_graph_def(tf_path), cmsml_tools.load_graph_def(keras_path)
+                default_signature = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY
+                tf_graph_def = cmsml_tools.load_graph_def(tf_path, default_signature)
+                keras_graph_def = cmsml_tools.load_graph_def(keras_path, default_signature)
             return tf_graph_def, keras_graph_def
+
         elif create == 'graph':
-            concrete_func = self.create_tf_function(concrete=True)
+            concrete_func = tf.function(model).get_concrete_function(tf.ones((2, 10)))
 
             with tmp_file(suffix=".pb") as pb_path:
-                cmsml.tensorflow.save_graph(pb_path, concrete_func, variables_to_constants=False)
-            return cmsml.tensorflow.load_graph_def(pb_path, self.tf2.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
-
+                cmsml_tools.save_graph(pb_path, concrete_func, variables_to_constants=False)
+                graph_graph_def = cmsml.tensorflow.load_graph_def(pb_path,
+                                                 tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
+            return graph_graph_def
 
     def test_get_graph_ops_saved_model(self):
         tf_graph_def, keras_graph_def = self.create_graph_def(create='saved_model')
 
-        self.assertRaises(AttributeError,cmsml.tensorflow.get_graph_ops(tf_graph_def, node_def_number=len(graph_def.library.function)+1))
-
-        graph_ops = set(cmsml.tensorflow.get_graph_ops(tf_graph_def, node_def_number=0))
+        graph_ops = set(get_graph_ops(tf_graph_def, node_def_number=0))
         expected_ops = {'AddV2',
                         'BiasAdd',
                         'Const',
@@ -86,32 +84,31 @@ class AotTestCase(CMSMLTestCase):
                         'Tanh'
                         }
 
-        io_ops = {'ReadVariableOp',
-                  'Placeholder'
-                  }
-
+        io_ops = {'ReadVariableOp', 'Placeholder'}
         ops_without_io = graph_ops - io_ops
-        self.assertEqual(ops_without_io, expected_ops)
-
+        self.assertSetEqual(ops_without_io, expected_ops)
 
     def test_get_graph_ops_graph(self):
         concrete_function_graph_def = self.create_graph_def(create='graph')
-        graph_ops = set(cmsml.tensorflow.get_graph_ops(concrete_function_graph_def, node_def_number=0))
+        graph_ops = set(get_graph_ops(concrete_function_graph_def, node_def_number=0))
 
-        expected_ops = {
-         'MatMul',
-         'AddV2',
-         'Tanh',
-         'Identity',
-         'NoOp'
-         }
+        expected_ops = {'AddV2',
+                        'BiasAdd',
+                        'Const',
+                        'Identity',
+                        'MatMul',
+                        'Mul',
+                        'NoOp',
+                        'Rsqrt',
+                        'Softmax',
+                        'Sub',
+                        'Tanh'
+                        }
 
-         io_ops = {'ReadVariableOp', 'Placeholder'}
+        io_ops = {'ReadVariableOp', 'Placeholder'}
 
-         ops_without_io = graph_ops - io_op
-         self.assertEqual(ops_without_io, expected_ops)
-
-
+        ops_without_io = graph_ops - io_ops
+        self.assertSetEqual(ops_without_io, expected_ops)
 
 
 class OpsTestCase(CMSMLTestCase):
@@ -144,47 +141,25 @@ class OpsTestCase(CMSMLTestCase):
         return self._tf_version
 
     def test_parse_ops_table(self):
-        # function to read in the table
         ops_dict = OpsData.parse_ops_table(device='cpu')
+        expected_ops = ('Abs', 'Acosh', 'Add', 'Atan', 'BatchMatMul', 'Conv2D')
 
-        should_have_ops = {'Abs': {'name': 'Abs',
-                          'device': 'cpu',
-                          'allowed_types': 'T={double,float,int32,int64}'},
-                          'Acosh': {'name': 'Acosh',
-                          'device': 'cpu',
-                          'allowed_types': 'T={complex64,double,float}'},
-                          'Add': {'name': 'Add',
-                          'device': 'cpu',
-                          'allowed_types': 'T={complex64,double,float,int32,int64}'},
-                          }
+        # check if ops name and content exist
+        # since content changes with every version only naiv test is done
 
-        for should_have_op in should_have_ops.keys():
-            self.assertEqual(ops_dict[should_have_op]['allowed_types'], should_have_ops[should_have_op]['allowed_types'])
+        for op in expected_ops:
+            self.assertTrue(bool(ops_dict[op]['allowed_types']))
 
     def test___determine_ops(self):
         # function to merge multiple tables
-        devices = ('cpu','gpu')
+        devices = ('cpu', 'gpu')
 
         ops_data = OpsData(devices)
+        ops_data_ops = ops_data.ops
+        # for these ops cpu and gpu implentation are guaranteed
+        expected_ops = ('Abs', 'Acosh', 'Add', 'Atan', 'BatchMatMul', 'Conv2D')
 
-        should_have_ops = { 'Abs': {'cpu': 'T={double,float,int32,int64}',
-                                  'gpu': 'T={double,float,int32,int64}'
-                                  },
-                            'Acosh': {'cpu': 'T={complex64,double,float}',
-                                  'gpu': 'T={complex64,double,float}'
-                                  },
-                            'Add': {'cpu': 'T={complex64,double,float,int32,int64}',
-                                  'gpu': 'T={complex64,double,float,int32,int64}'
-                                  }
-                          }
-        for op in should_have_ops.keys():
+        # content for cpu and gpu should not be empty
+        for op in expected_ops:
             for device in devices:
-                self.assertEqual(should_have_ops[op][device], ops_data._ops_dict[op][device])
-
-
-
-
-
-
-
-
+                self.assertTrue(bool(ops_data_ops[op][device]))

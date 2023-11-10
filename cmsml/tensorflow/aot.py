@@ -6,7 +6,6 @@ Tools and objects for working with AOT / XLA.
 
 from __future__ import annotations
 
-import os
 import sys
 import re
 from subprocess import PIPE
@@ -16,9 +15,7 @@ from cmsml.tensorflow.tools import import_tf
 
 tf = import_tf()[0]
 
-import tensorflow.core
-
-GraphDef = tensorflow.core.framework.graph_pb2.GraphDef
+from tensorflow.core.framework.graph_pb2 import GraphDef
 
 
 class OpsData(object):
@@ -98,7 +95,7 @@ class OpsData(object):
             table = cls.read_ops_table(device)
         else:
             with open(table, "r") as txt_file:
-                table = table.read()
+                table = txt_file.read()
 
         # split into lines
         lines = table.splitlines()
@@ -206,7 +203,7 @@ class OpsData(object):
     @property
     def ops(self) -> set[str]:
         # get unique ops that have CPU or GPU implementation
-        return self._get_unique_ops()
+        return self._ops
 
     def __len__(self) -> int:
         # number of ops
@@ -234,11 +231,13 @@ def get_graph_ops(graph_def: GraphDef, node_def_number: int = 0) -> list[str]:
     If there are multiple 'FunctionDef' instances in the GraphDef, set *node_def_number* to specify
     from which GraphDef the ops will be extracted.
     """
-    node_def = graph_def.node
 
-    # when the node definition is missing, try to extract it from the graph "library"
-    if not node_def:
-        num_funcs = len(graph_def.library.function)
+    # extract node definition from the graph "library for savedmodels"
+    num_funcs = len(graph_def.library.function)
+    # library is empty for graph.pb, but not for SavedModels
+    if num_funcs == 0:
+        node_def = graph_def.node
+    else:
         if node_def_number + 1 > num_funcs:
             raise AttributeError(
                 f"node_def_number {node_def_number} does not match amount of {num_funcs} "
