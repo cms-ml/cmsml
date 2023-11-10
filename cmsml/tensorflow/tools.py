@@ -12,6 +12,7 @@ import os
 import warnings
 from types import ModuleType
 from typing import Any
+from tensorflow.core.framework.graph_pb2 import GraphDef
 
 from cmsml.util import MockModule
 
@@ -332,7 +333,8 @@ def load_graph_def(
 def load_model(model_path: str) -> tf.Model:
     """
     Load and return the SavedModel stored in the directory *model_path*.
-    If the model was saved using Keras API, it will be loaded using the same API, otherwise TensorFlows SavedModel API is used.
+    If the model was saved using Keras API, it will be loaded using the same API,
+    otherwise TensorFlows SavedModel API is used.
     """
     tf, tf1, tf_version = import_tf()
 

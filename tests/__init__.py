@@ -52,3 +52,5 @@ from .test_lazy_loader import *
 from .test_util import *
 from .test_tensorflow import *
 from .test_keras_callbacks import *
+from .test_aot import *
+from .test_compile_tf_graph import *
