@@ -21,7 +21,8 @@ def check_aot_compatibility(
 ) -> None:
     """
     Load model stored in *model_path* and extract the GraphDef saved under specified *serving_key*.
-    From this GraphDef, gather all ops for specific *devices* and compare to all ops that have an XLA implementation.
+    From this GraphDef, gather all ops for specific *devices* and
+    compare to all ops with XLA implementation.
     The matching result is printed given the chosen *table_format* style.
 
     """
@@ -64,7 +65,6 @@ def print_op_table(
     Read ops for chosen *devices* and print a table given *table_format* style.
     Specific ops can be filtered out using *filter_ops*.
     """
-
 
     # read ops
     ops = OpsData(devices)

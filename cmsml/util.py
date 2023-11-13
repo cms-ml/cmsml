@@ -18,8 +18,9 @@ import tempfile
 import contextlib
 import subprocess
 import signal
-import types
 import importlib
+import six
+
 from collections.abc import MappingView
 from types import GeneratorType, ModuleType
 from typing import Any
