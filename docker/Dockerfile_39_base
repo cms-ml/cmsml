@@ -9,7 +9,7 @@ RUN apt-get install -y nano less htop git; apt-get clean
 
 # python software stack
 RUN pip install --no-cache-dir --upgrade pip setuptools
-RUN pip install --no-cache-dir --upgrade ipython
+RUN pip install --no-cache-dir --upgrade pytest pytest-xdist
 
 # initial command
 CMD ["bash", "-i", "-l"]
