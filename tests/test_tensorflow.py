@@ -5,6 +5,7 @@ TensorFlow tests.
 """
 
 import os
+import contextlib
 
 import cmsml
 from cmsml.util import tmp_file, tmp_dir
@@ -328,3 +329,39 @@ class TensorFlowTestCase(CMSMLTestCase):
                 self.assertTrue(os.path.exists(path))
                 self.assertGreater(len(os.listdir(path)), 0)
                 self.assertTrue(os.path.exists(path))
+
+    @contextlib.contextmanager
+    def create_saved_model(self, **kwargs):
+        # helper function to create, saved_model
+
+        model = self.create_keras_model(self.tf)
+
+        with tmp_dir(create=False) as keras_path, tmp_dir(create=False) as tf_path:
+            self.tf.saved_model.save(model, tf_path)
+            model.save(keras_path, overwrite=True, include_optimizer=False)
+
+            yield keras_path, tf_path
+
+    def test_load_model(self):
+        with self.create_saved_model() as paths:
+            keras_path, tf_path = paths
+            keras_model = cmsml.tensorflow.load_model(keras_path)
+            tf_model = cmsml.tensorflow.load_model(tf_path)
+
+            inp = self.tf.ones(shape=(2, 10))
+            keras_out, tf_out = keras_model(inp), tf_model(inp)
+
+            expected_shape = self.tf.TensorShape([2, 3])
+
+            self.assertEqual(keras_out.shape, expected_shape)
+            self.assertEqual(tf_out.shape, expected_shape)
+
+    def test_load_graph_def(self):
+        with self.create_saved_model() as paths:
+            keras_path, tf_path = paths
+            default_serving_key = self.tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY
+            tf_graph_def = cmsml.tensorflow.load_graph_def(tf_path, default_serving_key)
+            keras_graph_def = cmsml.tensorflow.load_graph_def(keras_path, default_serving_key)
+
+            self.assertTrue(isinstance(tf_graph_def, self.tf.compat.v1.GraphDef))
+            self.assertTrue(isinstance(keras_graph_def, self.tf.compat.v1.GraphDef))
