@@ -7,7 +7,6 @@ Helpful functions and utilities.
 from __future__ import annotations
 
 __all__ = [
-
     "is_lazy_iterable", "make_list", "tmp_file", "tmp_dir", "MockModule",
 ]
 

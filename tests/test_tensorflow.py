@@ -6,6 +6,7 @@ TensorFlow tests.
 
 import os
 import contextlib
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import cmsml
 from cmsml.util import tmp_file, tmp_dir
@@ -16,9 +17,7 @@ from . import CMSMLTestCase
 class TensorFlowTestCase(CMSMLTestCase):
 
     def __init__(self, *args, **kwargs):
-        super(TensorFlowTestCase, self).__init__(*args, **kwargs)
-
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        super().__init__(*args, **kwargs)
 
         self._tf = None
         self._tf1 = None
@@ -170,8 +169,12 @@ class TensorFlowTestCase(CMSMLTestCase):
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_frozen_graph(path, session, variables_to_constants=True,
-                output_names=["output"])
+            cmsml.tensorflow.save_frozen_graph(
+                path,
+                session,
+                variables_to_constants=True,
+                output_names=["output"],
+            )
             self.assertTrue(os.path.exists(path))
 
         with tmp_file(suffix=".pb") as path:

@@ -12,7 +12,7 @@ from . import CMSMLTestCase
 class TfCompileTestCase(CMSMLTestCase):
 
     def __init__(self, *args, **kwargs):
-        super(TfCompileTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._tf = None
         self._tf1 = None

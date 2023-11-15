@@ -129,7 +129,7 @@ class AOTTestCase(CMSMLTestCase):
 class OpsTestCase(CMSMLTestCase):
 
     def __init__(self, *args, **kwargs):
-        super(OpsTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._tf = None
         self._tf1 = None

@@ -4,7 +4,7 @@
 # Arguments:
 #   1. The docker image, defaults to "cmsml/cmsml".
 #   2. The test command. When just "i", an interactive bash is started instead of running the tests
-#      and exiting. Defaults to "python -m unittest tests".
+#      and exiting. Defaults to "pytest -n auto tests".
 
 action() {
     local this_file="$( [ ! -z "${ZSH_VERSION}" ] && echo "${(%):-%x}" || echo "${BASH_SOURCE[0]}" )"
@@ -13,7 +13,7 @@ action() {
 
     local image="${1:-cmsml/cmsml}"
     local cmd="${@:2}"
-    cmd="${cmd:-python -m unittest tests}"
+    cmd="${cmd:-pytest -n auto tests}"
 
     # tty options
     local tty_opts="$( [ -t 0 ] && echo "-ti" || echo "-t" )"
