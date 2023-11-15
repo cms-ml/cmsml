@@ -23,6 +23,7 @@ def skip_if_no_tf2xla_supported_ops(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if not HAS_TF2XLA_SUPPORTED_OPS:
+            print(f"skipping {func.__name__} because tf2xla_supported_ops is not available")
             return
         return func(*args, **kwargs)
     return wrapper
@@ -79,7 +80,7 @@ class AOTTestCase(CMSMLTestCase):
                 keras_graph_def = cmsml_tools.load_graph_def(keras_path, default_signature)
             return tf_graph_def, keras_graph_def
 
-        elif create == "graph":
+        if create == "graph":
             concrete_func = tf.function(model).get_concrete_function(tf.ones((2, 10)))
 
             with tmp_file(suffix=".pb") as pb_path:
@@ -89,6 +90,8 @@ class AOTTestCase(CMSMLTestCase):
                     tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
                 )
             return graph_graph_def
+
+        self.assertTrue(False)
 
     @skip_if_no_tf2xla_supported_ops
     def test_get_graph_ops_saved_model(self):
@@ -159,7 +162,6 @@ class OpsTestCase(CMSMLTestCase):
 
         # check if ops name and content exist
         # since content changes with every version only naiv test is done
-
         for op in expected_ops:
             self.assertTrue(bool(ops_dict[op]["allowed_types"]))
 

@@ -34,7 +34,7 @@ def compile_tf_graph(
     The resulting static 'ConcreteFunction' is saved as subgraph under a new *output_serving_key*
     signature in a SavedModel stored at *output_path*.
     If no *output_serving_key* is given the 'ConcreteFunction' are saved with the
-    signature "{*input_serving_key*}__bs{*batch_size*}"
+    signature "{*input_serving_key*}_bs{*batch_size*}".
 
     An optional AOT compilation is initiated if *compile_class* and *compile_prefix* are given.
     In this case *compile_prefix* is the file prefix, while *compile_class* is the name of the
@@ -44,7 +44,7 @@ def compile_tf_graph(
 
     # default output_serving key
     if not output_serving_key:
-        output_serving_key = input_serving_key + "__{}"
+        output_serving_key = input_serving_key + "_bs{}"
 
     # check compile values
     if compile_prefix and not compile_class:
@@ -80,7 +80,7 @@ def compile_tf_graph(
                 for n in spec.shape
             ]
             # : is the delimiter of ops numering scheme
-            name = f"{spec.name.replace(':', '_')}__bs{bs}"
+            name = f"{spec.name.replace(':', '_')}_bs{bs}"
             # store the new spec
             specs[key] = type(spec)(type(spec.shape)(shape), dtype=spec.dtype, name=name)
 
@@ -109,7 +109,7 @@ def aot_compile(
     prefix: str,
     class_name: str,
     batch_sizes: tuple[int] = (1,),
-    serving_key: str = r"serving_default__bs{}",
+    serving_key: str = r"serving_default_bs{}",
 ) -> None:
     """
     Take the provided static subgraph under specified *serving_key* from the SavedModel
