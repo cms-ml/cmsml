@@ -1,18 +1,38 @@
+# coding: utf-8
+
 from __future__ import annotations
+
 import os
+import functools
+import subprocess
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import cmsml
 from cmsml.util import tmp_dir, tmp_file
 import cmsml.tensorflow.tools as cmsml_tools
 from cmsml.tensorflow.aot import get_graph_ops, OpsData
+
 from . import CMSMLTestCase
 
 
-class AotTestCase(CMSMLTestCase):
+# check if the tf2xla_supported_ops command exists
+p = subprocess.run("type tf2xla_supported_ops", shell=True)
+HAS_TF2XLA_SUPPORTED_OPS = p.returncode == 0
+
+
+def skip_if_no_tf2xla_supported_ops(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not HAS_TF2XLA_SUPPORTED_OPS:
+            return
+        return func(*args, **kwargs)
+    return wrapper
+
+
+class AOTTestCase(CMSMLTestCase):
 
     def __init__(self, *args, **kwargs):
-        super(AotTestCase, self).__init__(*args, **kwargs)
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        super().__init__(*args, **kwargs)
 
         self._tf = None
         self._tf1 = None
@@ -36,7 +56,7 @@ class AotTestCase(CMSMLTestCase):
             self._tf, self._tf1, self._tf_version = cmsml.tensorflow.import_tf()
         return self._tf_version
 
-    def create_graph_def(self, create='saved_model', **kwargs):
+    def create_graph_def(self, create="saved_model", **kwargs):
         # helper function to create GraphDef from SavedModel or Graph
         tf = self.tf
 
@@ -47,7 +67,7 @@ class AotTestCase(CMSMLTestCase):
         model.add(tf.keras.layers.BatchNormalization(axis=1, renorm=True))
         model.add(tf.keras.layers.Dense(3, activation="softmax", name="output"))
 
-        if create == 'saved_model':
+        if create == "saved_model":
             with tmp_dir(create=False) as keras_path, tmp_dir(create=False) as tf_path:
 
                 tf.saved_model.save(model, tf_path)
@@ -58,7 +78,7 @@ class AotTestCase(CMSMLTestCase):
                 keras_graph_def = cmsml_tools.load_graph_def(keras_path, default_signature)
             return tf_graph_def, keras_graph_def
 
-        elif create == 'graph':
+        elif create == "graph":
             concrete_func = tf.function(model).get_concrete_function(tf.ones((2, 10)))
 
             with tmp_file(suffix=".pb") as pb_path:
@@ -67,45 +87,47 @@ class AotTestCase(CMSMLTestCase):
                                                  tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
             return graph_graph_def
 
+    @skip_if_no_tf2xla_supported_ops
     def test_get_graph_ops_saved_model(self):
-        tf_graph_def, keras_graph_def = self.create_graph_def(create='saved_model')
+        tf_graph_def, keras_graph_def = self.create_graph_def(create="saved_model")
 
         graph_ops = set(get_graph_ops(tf_graph_def, node_def_number=0))
-        expected_ops = {'AddV2',
-                        'BiasAdd',
-                        'Const',
-                        'Identity',
-                        'MatMul',
-                        'Mul',
-                        'NoOp',
-                        'Rsqrt',
-                        'Softmax',
-                        'Sub',
-                        'Tanh'
+        expected_ops = {"AddV2",
+                        "BiasAdd",
+                        "Const",
+                        "Identity",
+                        "MatMul",
+                        "Mul",
+                        "NoOp",
+                        "Rsqrt",
+                        "Softmax",
+                        "Sub",
+                        "Tanh"
                         }
 
-        io_ops = {'ReadVariableOp', 'Placeholder'}
+        io_ops = {"ReadVariableOp", "Placeholder"}
         ops_without_io = graph_ops - io_ops
         self.assertSetEqual(ops_without_io, expected_ops)
 
+    @skip_if_no_tf2xla_supported_ops
     def test_get_graph_ops_graph(self):
-        concrete_function_graph_def = self.create_graph_def(create='graph')
+        concrete_function_graph_def = self.create_graph_def(create="graph")
         graph_ops = set(get_graph_ops(concrete_function_graph_def, node_def_number=0))
 
-        expected_ops = {'AddV2',
-                        'BiasAdd',
-                        'Const',
-                        'Identity',
-                        'MatMul',
-                        'Mul',
-                        'NoOp',
-                        'Rsqrt',
-                        'Softmax',
-                        'Sub',
-                        'Tanh'
+        expected_ops = {"AddV2",
+                        "BiasAdd",
+                        "Const",
+                        "Identity",
+                        "MatMul",
+                        "Mul",
+                        "NoOp",
+                        "Rsqrt",
+                        "Softmax",
+                        "Sub",
+                        "Tanh"
                         }
 
-        io_ops = {'ReadVariableOp', 'Placeholder'}
+        io_ops = {"ReadVariableOp", "Placeholder"}
 
         ops_without_io = graph_ops - io_ops
         self.assertSetEqual(ops_without_io, expected_ops)
@@ -115,8 +137,6 @@ class OpsTestCase(CMSMLTestCase):
 
     def __init__(self, *args, **kwargs):
         super(OpsTestCase, self).__init__(*args, **kwargs)
-
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
         self._tf = None
         self._tf1 = None
@@ -141,23 +161,24 @@ class OpsTestCase(CMSMLTestCase):
         return self._tf_version
 
     def test_parse_ops_table(self):
-        ops_dict = OpsData.parse_ops_table(device='cpu')
-        expected_ops = ('Abs', 'Acosh', 'Add', 'Atan', 'BatchMatMul', 'Conv2D')
+        ops_dict = OpsData.parse_ops_table(device="cpu")
+        expected_ops = ("Abs", "Acosh", "Add", "Atan", "BatchMatMul", "Conv2D")
 
         # check if ops name and content exist
         # since content changes with every version only naiv test is done
 
         for op in expected_ops:
-            self.assertTrue(bool(ops_dict[op]['allowed_types']))
+            self.assertTrue(bool(ops_dict[op]["allowed_types"]))
 
-    def test___determine_ops(self):
+    @skip_if_no_tf2xla_supported_ops
+    def test_determine_ops(self):
         # function to merge multiple tables
-        devices = ('cpu', 'gpu')
+        devices = ("cpu", "gpu")
 
         ops_data = OpsData(devices)
         ops_data_ops = ops_data.ops
         # for these ops cpu and gpu implentation are guaranteed
-        expected_ops = ('Abs', 'Acosh', 'Add', 'Atan', 'BatchMatMul', 'Conv2D')
+        expected_ops = ("Abs", "Acosh", "Add", "Atan", "BatchMatMul", "Conv2D")
 
         # content for cpu and gpu should not be empty
         for op in expected_ops:
