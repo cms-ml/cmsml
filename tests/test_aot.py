@@ -9,8 +9,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import cmsml
 from cmsml.util import tmp_dir, tmp_file
-import cmsml.tensorflow.tools as cmsml_tools
-from cmsml.tensorflow.aot import get_graph_ops, OpsData
+# from cmsml.tensorflow.aot import get_graph_ops, OpsData
 
 from . import CMSMLTestCase
 
@@ -57,6 +56,8 @@ class AOTTestCase(CMSMLTestCase):
         return self._tf_version
 
     def create_graph_def(self, create="saved_model", **kwargs):
+        import cmsml.tensorflow.tools as cmsml_tools
+
         # helper function to create GraphDef from SavedModel or Graph
         tf = self.tf
 
@@ -91,6 +92,8 @@ class AOTTestCase(CMSMLTestCase):
 
     @skip_if_no_tf2xla_supported_ops
     def test_get_graph_ops_saved_model(self):
+        from cmsml.tensorflow.aot import get_graph_ops
+
         tf_graph_def, keras_graph_def = self.create_graph_def(create="saved_model")
 
         graph_ops = set(get_graph_ops(tf_graph_def, node_def_number=0))
@@ -105,6 +108,8 @@ class AOTTestCase(CMSMLTestCase):
 
     @skip_if_no_tf2xla_supported_ops
     def test_get_graph_ops_graph(self):
+        from cmsml.tensorflow.aot import get_graph_ops
+
         concrete_function_graph_def = self.create_graph_def(create="graph")
         graph_ops = set(get_graph_ops(concrete_function_graph_def, node_def_number=0))
 
@@ -147,6 +152,8 @@ class OpsTestCase(CMSMLTestCase):
 
     @skip_if_no_tf2xla_supported_ops
     def test_parse_ops_table(self):
+        from cmsml.tensorflow.aot import OpsData
+
         ops_dict = OpsData.parse_ops_table(device="cpu")
         expected_ops = ("Abs", "Acosh", "Add", "Atan", "BatchMatMul", "Conv2D")
 
@@ -158,6 +165,8 @@ class OpsTestCase(CMSMLTestCase):
 
     @skip_if_no_tf2xla_supported_ops
     def test_determine_ops(self):
+        from cmsml.tensorflow.aot import OpsData
+
         # function to merge multiple tables
         devices = ("cpu", "gpu")
 

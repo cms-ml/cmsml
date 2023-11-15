@@ -5,7 +5,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import cmsml
 from cmsml.util import tmp_dir
-from cmsml.scripts.compile_tf_graph import compile_tf_graph
 
 from . import CMSMLTestCase
 
@@ -49,6 +48,8 @@ class TfCompileTestCase(CMSMLTestCase):
         return model
 
     def test_compile_tf_graph_static_preparation(self):
+        from cmsml.scripts.compile_tf_graph import compile_tf_graph
+
         # check only preparation process for aot, but do not aot compile
         tf = self.tf
 
@@ -105,6 +106,8 @@ class TfCompileTestCase(CMSMLTestCase):
                                 compile_class=None)
 
     def test_compile_tf_graph_static_aot_compilation(self):
+        from cmsml.scripts.compile_tf_graph import compile_tf_graph
+
         # check aot compilation
         tf = self.tf
         model = self.create_test_model(tf)
