@@ -8,10 +8,9 @@ RUN apt-get update; apt-get clean
 RUN apt-get install -y nano less htop git; apt-get clean
 
 # python software stack
-RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade pip setuptools
 RUN pip install --no-cache-dir --upgrade ipython
 RUN pip install --no-cache-dir \
-    flake8 \
     numpy \
     scipy \
     matplotlib \
@@ -30,7 +29,7 @@ RUN pip install --no-cache-dir \
 # install cmsml from master
 RUN git clone https://github.com/cms-ml/cmsml.git && \
     cd cmsml && \
-    pip install --no-cache-dir . && \
+    pip install --no-cache-dir .[dev] && \
     cd .. && \
     rm -rf cmsml
 
