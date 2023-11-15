@@ -33,7 +33,7 @@ class OpsData(object):
         "gpu": "XLA_GPU_JIT",
     }
 
-    def __init__(self, devices: tuple[str] | None = None):
+    def __init__(self: OpsData, devices: tuple[str] | None = None) -> None:
         """
         Sets an iterable of *devices* for which the XLA operations table should be generate.
         """
@@ -142,7 +142,7 @@ class OpsData(object):
 
         return ops
 
-    def _determine_ops(self, devices: tuple[str] | None = None) -> None:
+    def _determine_ops(self: OpsData, devices: tuple[str] | None = None) -> None:
         """
         Merges multiple tables of different devices into 1 dictionary.
 
@@ -169,7 +169,7 @@ class OpsData(object):
 
         self._ops = ops
 
-    def _get_unique_ops(self, device: str | None = None) -> set[str]:
+    def _get_unique_ops(self: OpsData, device: str | None = None) -> set[str]:
         """
         Get all unique ops. If *device* is used the result is filtered after a specific device.
 
@@ -191,37 +191,37 @@ class OpsData(object):
         }
 
     @property
-    def cpu_ops(self) -> set[str]:
+    def cpu_ops(self: OpsData) -> set[str]:
         # get unique XLA compatible results for CPU only
         return self._get_unique_ops("cpu")
 
     @property
-    def gpu_ops(self) -> set[str]:
+    def gpu_ops(self: OpsData) -> set[str]:
         # get unique XLA compatible results for GPU only
         return self._get_unique_ops("gpu")
 
     @property
-    def ops(self) -> set[str]:
+    def ops(self: OpsData) -> set[str]:
         # get unique ops that have CPU or GPU implementation
         return self._ops
 
-    def __len__(self) -> int:
+    def __len__(self: OpsData) -> int:
         # number of ops
         return len(self._ops)
 
-    def __getitem__(self, key: str) -> dict:
+    def __getitem__(self: OpsData, key: str) -> dict:
         return self._ops[key]
 
-    def keys(self) -> list[str]:
+    def keys(self: OpsData) -> list[str]:
         return self._ops.keys()
 
-    def values(self) -> list[dict]:
+    def values(self: OpsData) -> list[dict]:
         return self._ops.values()
 
-    def items(self) -> list[tuple[str, dict]]:
+    def items(self: OpsData) -> list[tuple[str, dict]]:
         return self._ops.items()
 
-    def get(self, *args, **kwargs) -> tuple[str, dict]:
+    def get(self: OpsData, *args, **kwargs) -> tuple[str, dict]:
         return self._ops.get(*args, **kwargs)
 
 

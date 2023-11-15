@@ -23,22 +23,19 @@ def compile_tf_graph(
     compile_class: str | None = None,
 ) -> None:
     """
-    For AOT compilation a static memory layout at runtime is required.
-    This function prepares the given input SavedModel to make it ready for AOT compilation
+    For AOT compilation a static memory layout at runtime is required. This function prepares the given input SavedModel
+    to make it ready for AOT compilation
 
-    This function takes the subgraph saved under the *input_serving_key* signature
-    within a given SavedModel, stored in *model_path*,
-    and creates a 'ConcreteFunction' with a static shape for given *batch_sizes*.
-    If not *input_serving_key* is given the TensorFlow default 'serving_default' is used.
+    This function takes the subgraph saved under the *input_serving_key* signature within a given SavedModel, stored in
+    *model_path*, and creates a 'ConcreteFunction' with a static shape for given *batch_sizes*. If not
+    *input_serving_key* is given the TensorFlow default 'serving_default' is used.
 
-    The resulting static 'ConcreteFunction' is saved as subgraph under a new *output_serving_key*
-    signature in a SavedModel stored at *output_path*.
-    If no *output_serving_key* is given the 'ConcreteFunction' are saved with the
+    The resulting static 'ConcreteFunction' is saved as subgraph under a new *output_serving_key* signature in a
+    SavedModel stored at *output_path*. If no *output_serving_key* is given the 'ConcreteFunction' are saved with the
     signature "{*input_serving_key*}_bs{*batch_size*}".
 
-    An optional AOT compilation is initiated if *compile_class* and *compile_prefix* are given.
-    In this case *compile_prefix* is the file prefix, while *compile_class* is the name of the
-    AOT class within the generated files.
+    An optional AOT compilation is initiated if *compile_class* and *compile_prefix* are given. In this case
+    *compile_prefix* is the file prefix, while *compile_class* is the name of the AOT class within the generated files.
     """
     tf = import_tf()[0]
 
@@ -112,11 +109,11 @@ def aot_compile(
     serving_key: str = r"serving_default_bs{}",
 ) -> None:
     """
-    Take the provided static subgraph under specified *serving_key* from the SavedModel
-    located at *model_path* and perform AOT compilation on it.
+    Take the provided static subgraph under specified *serving_key* from the SavedModel located at *model_path* and
+    perform AOT compilation on it.
 
-    This process generate a header and object files at /*output_path*/*prefix*_*batch_sizes*.{o,h}.
-    The *class_name* is used as class name within the header access the AOT-compiled network.
+    This process generate a header and object files at /*output_path*/*prefix*_*batch_sizes*.{o,h}. The *class_name* is
+    used as class name within the header access the AOT-compiled network.
     """
     # prepare model path
     model_path = os.path.abspath(os.path.expandvars(os.path.expanduser(str(model_path))))

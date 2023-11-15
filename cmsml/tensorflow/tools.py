@@ -92,7 +92,7 @@ def save_graph(
         variables_to_constants=variables_to_constants,
         output_names=output_names,
         *args,
-        **kwargs  # noqa
+        **kwargs,
     )
 
 

@@ -48,4 +48,4 @@ jobs:
         run: docker pull cmsml/cmsml:${{ matrix.versions.tag }}
 
       - name: Test 🎰
-        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.versions.tag }} "[ '${{ matrix.versions.tf }}' = 'default' ] || pip install -U tensorflow=='${{ matrix.versions.tf }}'; pytest -n auto tests"
+        run: bash tests/docker.sh cmsml/cmsml:${{ matrix.versions.tag }} "[ '${{ matrix.versions.tf }}' = 'default' ] || pip install -U tensorflow=='${{ matrix.versions.tf }}'; pytest -n 2 tests"

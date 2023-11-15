@@ -20,13 +20,10 @@ def check_aot_compatibility(
     table_format: str = "grid",
 ) -> None:
     """
-    Load model stored in *model_path* and extract the GraphDef saved under specified *serving_key*.
-    From this GraphDef, gather all ops for specific *devices* and
-    compare to all ops with XLA implementation.
-    The matching result is printed given the chosen *table_format* style.
-
+    Load model stored in *model_path* and extract the GraphDef saved under specified *serving_key*. From this GraphDef,
+    gather all ops for specific *devices* and compare to all ops with XLA implementation. The matching result is printed
+    given the chosen *table_format* style.
     """
-
     # open the graph
     graph_def = load_graph_def(model_path, serving_key=serving_key)
 
@@ -62,10 +59,9 @@ def print_op_table(
     table_format: str = "grid",
 ) -> tuple[list[str], OpsData]:
     """
-    Read ops for chosen *devices* and print a table given *table_format* style.
-    Specific ops can be filtered out using *filter_ops*.
+    Read ops for chosen *devices* and print a table given *table_format* style. Specific ops can be filtered out using
+    *filter_ops*.
     """
-
     # read ops
     ops = OpsData(devices)
 

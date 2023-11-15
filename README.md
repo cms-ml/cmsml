@@ -62,7 +62,7 @@ To use the cmsml package via docker, checkout our [DockerHub](https://hub.docker
 The tests can be triggered with
 
 ```shell
-python -m unittest tests
+pytest -n auto tests
 ```
 
 and in general, they should be run for Python 3.7 to 3.11.
