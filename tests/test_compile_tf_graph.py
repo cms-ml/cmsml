@@ -1,4 +1,7 @@
+# coding: utf-8
+
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 import cmsml
 from cmsml.util import tmp_dir
@@ -10,7 +13,6 @@ from . import CMSMLTestCase
 class TfCompileTestCase(CMSMLTestCase):
     def __init__(self, *args, **kwargs):
         super(TfCompileTestCase, self).__init__(*args, **kwargs)
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
         self._tf = None
         self._tf1 = None
@@ -70,11 +72,25 @@ class TfCompileTestCase(CMSMLTestCase):
                 loaded_static_model = cmsml.tensorflow.load_model(static_saved_model_path)
                 for batch_size in batch_sizes:
                     # first entry is empty, second contains inputs tuple(tensorspecs)
-                    model_static_inputs = loaded_static_model.signatures[f'serving_default__{batch_size}'].structured_input_signature[1]
+                    model_static_inputs = loaded_static_model.signatures[f"serving_default__{batch_size}"].structured_input_signature[1]  # noqa
 
-                    expected_model_static_inputs = {f"first__bs{batch_size}": tf.TensorSpec(shape=(batch_size, 2), dtype=tf.float32, name=f"first__bs{batch_size}"),
-                                                 f"second__bs{batch_size}": tf.TensorSpec(shape=(batch_size, 3), dtype=tf.float32, name=f"second__bs{batch_size}"),
-                                                 f"third__bs{batch_size}": tf.TensorSpec(shape=(batch_size, 10), dtype=tf.float32, name=f"third__bs{batch_size}")}
+                    expected_model_static_inputs = {
+                        f"first__bs{batch_size}": tf.TensorSpec(
+                            shape=(batch_size, 2),
+                            dtype=tf.float32,
+                            name=f"first__bs{batch_size}",
+                        ),
+                        f"second__bs{batch_size}": tf.TensorSpec(
+                            shape=(batch_size, 3),
+                            dtype=tf.float32,
+                            name=f"second__bs{batch_size}",
+                        ),
+                        f"third__bs{batch_size}": tf.TensorSpec(
+                            shape=(batch_size, 10),
+                            dtype=tf.float32,
+                            name=f"third__bs{batch_size}",
+                        ),
+                    }
 
                     self.assertDictEqual(model_static_inputs, expected_model_static_inputs)
 
@@ -103,13 +119,13 @@ class TfCompileTestCase(CMSMLTestCase):
                                 batch_sizes=batch_sizes,
                                 input_serving_key=tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
                                 output_serving_key=None,
-                                compile_prefix='aot_model_bs_{}',
-                                compile_class='bs_{}')
+                                compile_prefix="aot_model_bs_{}",
+                                compile_class="bs_{}")
 
                 aot_dir = os.path.join(static_saved_model_path, "aot")
                 for batch_size in batch_sizes:
-                    aot_model_header = os.path.join(aot_dir, 'aot_model_bs_{}.h'.format(batch_size))
-                    aot_model_object = os.path.join(aot_dir, 'aot_model_bs_{}.o'.format(batch_size))
+                    aot_model_header = os.path.join(aot_dir, "aot_model_bs_{}.h".format(batch_size))
+                    aot_model_object = os.path.join(aot_dir, "aot_model_bs_{}.o".format(batch_size))
 
                     self.assertTrue(os.path.exists(aot_model_object))
                     self.assertTrue(os.path.exists(aot_model_header))

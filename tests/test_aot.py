@@ -83,8 +83,10 @@ class AOTTestCase(CMSMLTestCase):
 
             with tmp_file(suffix=".pb") as pb_path:
                 cmsml_tools.save_graph(pb_path, concrete_func, variables_to_constants=False)
-                graph_graph_def = cmsml.tensorflow.load_graph_def(pb_path,
-                                                 tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY)
+                graph_graph_def = cmsml.tensorflow.load_graph_def(
+                    pb_path,
+                    tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+                )
             return graph_graph_def
 
     @skip_if_no_tf2xla_supported_ops
@@ -92,20 +94,12 @@ class AOTTestCase(CMSMLTestCase):
         tf_graph_def, keras_graph_def = self.create_graph_def(create="saved_model")
 
         graph_ops = set(get_graph_ops(tf_graph_def, node_def_number=0))
-        expected_ops = {"AddV2",
-                        "BiasAdd",
-                        "Const",
-                        "Identity",
-                        "MatMul",
-                        "Mul",
-                        "NoOp",
-                        "Rsqrt",
-                        "Softmax",
-                        "Sub",
-                        "Tanh"
-                        }
-
+        expected_ops = {
+            "AddV2", "BiasAdd", "Const", "Identity", "MatMul", "Mul", "NoOp", "Rsqrt", "Softmax",
+            "Sub", "Tanh",
+        }
         io_ops = {"ReadVariableOp", "Placeholder"}
+
         ops_without_io = graph_ops - io_ops
         self.assertSetEqual(ops_without_io, expected_ops)
 
@@ -114,19 +108,10 @@ class AOTTestCase(CMSMLTestCase):
         concrete_function_graph_def = self.create_graph_def(create="graph")
         graph_ops = set(get_graph_ops(concrete_function_graph_def, node_def_number=0))
 
-        expected_ops = {"AddV2",
-                        "BiasAdd",
-                        "Const",
-                        "Identity",
-                        "MatMul",
-                        "Mul",
-                        "NoOp",
-                        "Rsqrt",
-                        "Softmax",
-                        "Sub",
-                        "Tanh"
-                        }
-
+        expected_ops = {
+            "AddV2", "BiasAdd", "Const", "Identity", "MatMul", "Mul", "NoOp", "Rsqrt", "Softmax",
+            "Sub", "Tanh",
+        }
         io_ops = {"ReadVariableOp", "Placeholder"}
 
         ops_without_io = graph_ops - io_ops
@@ -160,6 +145,7 @@ class OpsTestCase(CMSMLTestCase):
             self._tf, self._tf1, self._tf_version = cmsml.tensorflow.import_tf()
         return self._tf_version
 
+    @skip_if_no_tf2xla_supported_ops
     def test_parse_ops_table(self):
         ops_dict = OpsData.parse_ops_table(device="cpu")
         expected_ops = ("Abs", "Acosh", "Add", "Atan", "BatchMatMul", "Conv2D")
