@@ -3,4 +3,3 @@ flake8-commas~=2.1
 flake8-quotes~=3.3
 pytest-cov>=3.0
 pytest-xdist~=3.4.0
-build~=1.0.3

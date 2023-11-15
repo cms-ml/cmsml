@@ -221,12 +221,13 @@ class MockModule(object):
         print(tf.Graph)
         # -> "<MockupModule 'tf' at 0x981jald1>"
 
-    will always succeed at declaration.
+    will always succeed at declaration time.
 
     .. py:attribute:: _name
-       type: str
 
-       The name of the mock module.
+        type: str
+
+        The name of the mock module.
     """
 
     def __init__(self, name: str):
