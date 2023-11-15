@@ -1,8 +1,7 @@
 # coding: utf-8
 
 """
-Script that reads a tensorflow graph from a model file and ahead-of-time compiles it for selected
-batch-sizes using XLA.
+Script that reads a tensorflow graph from a model file and ahead-of-time compiles it for selected batch-sizes using XLA.
 """
 
 from __future__ import annotations
@@ -109,11 +108,11 @@ def aot_compile(
     serving_key: str = r"serving_default_bs{}",
 ) -> None:
     """
-    Take the provided static subgraph under specified *serving_key* from the SavedModel located at *model_path* and
-    perform AOT compilation on it.
+    Loads the graph from the SavedModel located at *model_path*, extracts the static graph specified by *serving_key*
+    from it, AOT compiles it.
 
-    This process generate a header and object files at /*output_path*/*prefix*_*batch_sizes*.{o,h}. The *class_name* is
-    used as class name within the header access the AOT-compiled network.
+    This process generates header and object files at *output_path*. The *class_name* is used as class name within the
+    header access the AOT-compiled network.
     """
     # prepare model path
     model_path = os.path.abspath(os.path.expandvars(os.path.expanduser(str(model_path))))
@@ -179,7 +178,7 @@ def main() -> None:
 
     parser.add_argument(
         "model_path",
-        help="the path to the model to open",
+        help="the path of the model to open",
     )
     parser.add_argument(
         "output_path",

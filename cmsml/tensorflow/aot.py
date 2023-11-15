@@ -83,10 +83,9 @@ class OpsData(object):
         device: str = "cpu",
     ) -> dict[str, dict]:
         """
-        Read a given markdown-*table* generated with 'tf2xla_supported_ops' and returns a dictionary
-        contaning all ops with XLA implementation.
-        For a given table the *device* information is ignored and extracted from the table.
-        If no table is given one will be generate for given *device*.
+        Read a given markdown-*table* generated with 'tf2xla_supported_ops' and returns a dictionary contaning all ops
+        with XLA implementation. For a given table the *device* information is ignored and extracted from the table. If
+        no table is given one will be generate for given *device*.
         """
         cls._assert_device_supported(device)
 
@@ -146,8 +145,8 @@ class OpsData(object):
         """
         Merges multiple tables of different devices into 1 dictionary.
 
-        WARNING: Since its not possible to see from which version the markdown table is generated,
-        try to not mix tables from differnt tensorflow versions.
+        WARNING: Since its not possible to see from which version the markdown table is generated, try to not mix tables
+        from different tensorflow versions.
         """
         if not devices:
             devices = tuple(self.device_ids.keys())
@@ -170,18 +169,6 @@ class OpsData(object):
         self._ops = ops
 
     def _get_unique_ops(self: OpsData, device: str | None = None) -> set[str]:
-        """
-        Get all unique ops. If *device* is used the result is filtered after a specific device.
-
-        Args:
-            device (str, optional): Name of a supported device (cpu, gpu)
-
-        Returns:
-            set: All unique operators
-
-        Raises:
-            NotImplementedError: Raises, when an unsupported device is used.
-        """
         self._assert_device_supported(device)
 
         return {
@@ -213,13 +200,13 @@ class OpsData(object):
         return self._ops[key]
 
     def keys(self: OpsData) -> list[str]:
-        return self._ops.keys()
+        return list(self._ops.keys())
 
     def values(self: OpsData) -> list[dict]:
-        return self._ops.values()
+        return list(self._ops.values())
 
     def items(self: OpsData) -> list[tuple[str, dict]]:
-        return self._ops.items()
+        return list(self._ops.items())
 
     def get(self: OpsData, *args, **kwargs) -> tuple[str, dict]:
         return self._ops.get(*args, **kwargs)
@@ -227,11 +214,10 @@ class OpsData(object):
 
 def get_graph_ops(graph_def: GraphDef, node_def_number: int = 0) -> list[str]:
     """
-    Reads *graph_def* and extracts all ops from the 'GraphDef'.
-    If there are multiple 'FunctionDef' instances in the GraphDef, set *node_def_number* to specify
-    from which GraphDef the ops will be extracted.
+    Extracts all ops from a *graph_def* and returns them as a list.
+    If there are multiple ``FunctionDef`` instances in the graph, set *node_def_number* to specify from which GraphDef
+    the ops should be extracted.
     """
-
     # extract node definition from the graph "library for savedmodels"
     num_funcs = len(graph_def.library.function)
     # library is empty for graph.pb, but not for SavedModels

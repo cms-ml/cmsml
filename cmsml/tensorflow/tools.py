@@ -295,10 +295,8 @@ def load_graph_def(
     serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
 ) -> GraphDef:
     """
-    Loads the model under *model_path* and returns the GraphDef of it.
-    Support is given for either tensorflow or keras SavedModel, as well as for frozen graphs.
-
-    TODO: merge this with existing function in tools.py?
+    Loads the model saved at *model_path* and returns the GraphDef of it. Supported input types are tensorflow and keras
+    SavedModels, as well as frozen graphs.
     """
     tf, tf1, tf_version = import_tf()
 
@@ -332,9 +330,8 @@ def load_graph_def(
 
 def load_model(model_path: str) -> tf.Model:
     """
-    Load and return the SavedModel stored in the directory *model_path*.
-    If the model was saved using Keras API, it will be loaded using the same API,
-    otherwise TensorFlows SavedModel API is used.
+    Load and return the SavedModel stored at *model_path*. If the model was saved using keras it will be loaded using
+    keras SavedModel API, otherwise tensorflow's SavedModel API is used.
     """
     tf, tf1, tf_version = import_tf()
 
