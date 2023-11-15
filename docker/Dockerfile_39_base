@@ -8,7 +8,7 @@ RUN apt-get update; apt-get clean
 RUN apt-get install -y nano less htop git; apt-get clean
 
 # python software stack
-RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade pip setuptools
 RUN pip install --no-cache-dir --upgrade ipython
 
 # initial command

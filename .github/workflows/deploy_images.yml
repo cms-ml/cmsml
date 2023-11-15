@@ -51,6 +51,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+  py39:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: docker/build-push-action@v1
+        with:
+          path: docker
+          dockerfile: docker/Dockerfile_39
+          repository: cmsml/cmsml
+          tags: 3.9,3,latest
+          push: ${{ github.event.inputs.skip_push != 'true' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
   py39_base:
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.skip_push != 'true' }}
@@ -67,25 +86,6 @@ jobs:
           dockerfile: docker/Dockerfile_39_base
           repository: cmsml/cmsml
           tags: 3.9_base
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-  py39:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout 🛎️
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-
-      - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
-        with:
-          path: docker
-          dockerfile: docker/Dockerfile_39
-          repository: cmsml/cmsml
-          tags: 3.9,3,latest
           push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
