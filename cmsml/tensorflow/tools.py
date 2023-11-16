@@ -9,8 +9,10 @@ from __future__ import annotations
 __all__ = []
 
 import os
+import warnings
 from types import ModuleType
 from typing import Any
+from tensorflow.core.framework.graph_pb2 import GraphDef
 
 from cmsml.util import MockModule
 
@@ -70,6 +72,31 @@ def import_tf(
 
 
 def save_graph(
+    path: str,
+    obj: Any,
+    variables_to_constants: bool = False,
+    output_names: list[str] | None = None,
+    *args,
+    **kwargs,
+) -> None:
+    """
+    Deprecated. Please use :py:func:`save_frozen_graph`.
+    """
+    warnings.warn(
+        "save_graph() is deprecated, please use save_frozen_graph() instead",
+        DeprecationWarning,
+    )
+    return save_frozen_graph(
+        path,
+        obj,
+        variables_to_constants=variables_to_constants,
+        output_names=output_names,
+        *args,
+        **kwargs,
+    )
+
+
+def save_frozen_graph(
     path: str,
     obj: Any,
     variables_to_constants: bool = False,
@@ -181,6 +208,27 @@ def load_graph(
     as_text: bool | None = None,
 ) -> tf.Graph | tuple[tf.Graph, tf.Session]:
     """
+    Deprecated. Please use :py:func:`load_frozen_graph`.
+    """
+    warnings.warn(
+        "load_graph() is deprecated, please use load_frozen_graph() instead",
+        DeprecationWarning,
+    )
+    return load_frozen_graph(
+        path=path,
+        create_session=create_session,
+        session_kwargs=session_kwargs,
+        as_text=as_text,
+    )
+
+
+def load_frozen_graph(
+    path: str,
+    create_session: bool | None = None,
+    session_kwargs: dict | None = None,
+    as_text: bool | None = None,
+) -> tf.Graph | tuple[tf.Graph, tf.Session]:
+    """
     Reads a saved TensorFlow graph from *path* and returns it. When *create_session* is *True*,
     a session object (compatible with the v1 API) is created and returned as the second value of
     a 2-tuple. The default value of *create_session* is *True* when TensorFlow v1 is detected,
@@ -192,9 +240,9 @@ def load_graph(
 
     .. code-block:: python
 
-        graph = load_graph("path/to/model.pb", create_session=False)
+        graph = load_frozen_graph("path/to/model.pb", create_session=False)
 
-        graph, session = load_graph("path/to/model.pb", create_session=True)
+        graph, session = load_frozen_graph("path/to/model.pb", create_session=True)
     """
     tf, tf1, tf_version = import_tf()
     path = os.path.expandvars(os.path.expanduser(str(path)))
@@ -242,6 +290,61 @@ def load_graph(
         return graph
 
 
+def load_graph_def(
+    model_path: str,
+    serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
+) -> GraphDef:
+    """
+    Loads the model saved at *model_path* and returns the GraphDef of it. Supported input types are tensorflow and keras
+    SavedModels, as well as frozen graphs.
+    """
+    tf, tf1, tf_version = import_tf()
+
+    model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
+
+    # if model_path is directory try load as saved model
+    if os.path.isdir(model_path) and tf.saved_model.contains_saved_model(model_path):
+        # if keras model try to load as keras model
+        # else load as tensorflow saved model
+        loaded_saved_model = load_model(model_path)
+
+        # extract graph
+        if serving_key not in loaded_saved_model.signatures:
+            raise KeyError(
+                f"no graph with serving key '{serving_key}' in model, "
+                f"existing keys: {', '.join(list(loaded_saved_model.signatures))}",
+            )
+        # loaded_saved_model.signatures[serving_key].function_def.node_def
+        return loaded_saved_model.signatures[serving_key].graph.as_graph_def()
+
+    # load as frozen graph
+    if os.path.splitext(model_path)[1] == ".pb":  # pb.txt pbtxt?? TODO
+        with tf.io.gfile.GFile(str(model_path), "rb") as f:
+            graph_def = tf.compat.v1.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+        return graph_def
+
+    raise FileNotFoundError(f"{model_path} contains neither frozen graph nor SavedModel")
+
+
+def load_model(model_path: str) -> tf.Model:
+    """
+    Load and return the SavedModel stored at *model_path*. If the model was saved using keras it will be loaded using
+    keras SavedModel API, otherwise tensorflow's SavedModel API is used.
+    """
+    tf, tf1, tf_version = import_tf()
+
+    model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
+
+    if os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, "keras_metadata.pb")):
+        model = tf.keras.models.load_model(model_path)
+    else:
+        model = tf.saved_model.load(model_path)
+
+    return model
+
+
 def write_graph_summary(
     graph: tf.Graph,
     summary_dir: str,
@@ -251,7 +354,7 @@ def write_graph_summary(
     Writes the summary of a *graph* to a directory *summary_dir* using a ``tf.summary.FileWriter``
     (v1) or ``tf.summary.create_file_writer`` (v2). This summary can be used later on to visualize
     the graph via tensorboard. *graph* can be either a graph object or a path to a protobuf file. In
-    the latter case, :py:func:`load_graph` is used and all *kwargs* are forwarded.
+    the latter case, :py:func:`load_frozen_graph` is used and all *kwargs* are forwarded.
 
     .. note::
         When used with TensorFlow v1, eager mode must be disabled.
@@ -263,7 +366,7 @@ def write_graph_summary(
 
     # read the graph when a string is passed
     if isinstance(graph, str):
-        graph = load_graph(graph, create_session=False, **kwargs)
+        graph = load_frozen_graph(graph, create_session=False, **kwargs)
 
     # further handling is version dependent
     tf, tf1, tf_version = import_tf()

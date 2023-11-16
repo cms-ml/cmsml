@@ -24,7 +24,7 @@ def main():
 
     parser.add_argument(
         "graph_path",
-        help="the path to the graph to open",
+        help="the path of the graph to open",
     )
     parser.add_argument(
         "--log-dir",
