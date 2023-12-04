@@ -24,7 +24,8 @@ RUN pip install --no-cache-dir \
     xgboost \
     scinum \
     nvidia_smi \
-    py3nvml
+    py3nvml \  
+    torch
 
 # install cmsml from master
 RUN git clone https://github.com/cms-ml/cmsml.git && \
