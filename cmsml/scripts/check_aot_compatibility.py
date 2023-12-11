@@ -10,7 +10,8 @@ from __future__ import annotations
 import tabulate
 
 from cmsml.util import colored
-from cmsml.tensorflow.aot import OpsData, load_graph_def, get_graph_ops
+from cmsml.tensorflow.tools import load_graph_def
+from cmsml.tensorflow.aot import OpsData, get_graph_ops
 
 
 def check_aot_compatibility(
