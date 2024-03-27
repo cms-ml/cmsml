@@ -45,7 +45,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_37
+          docker_file: docker/Dockerfile_37
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.7
           push_image: ${{ github.event.inputs.push_image == 'true' }}
@@ -64,7 +64,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_38
+          docker_file: docker/Dockerfile_38
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.8
           push_image: ${{ github.event.inputs.push_image == 'true' }}
@@ -83,7 +83,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_39
+          docker_file: docker/Dockerfile_39
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.9,cmsml/cmsml:3,cmsml/cmsml:latest
           push_image: ${{ github.event.inputs.push_image == 'true' }}
@@ -102,7 +102,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_39_base
+          docker_file: docker/Dockerfile_39_base
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.9_base
           push_image: ${{ github.event.inputs.push_image == 'true' }}
@@ -121,7 +121,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_310
+          docker_file: docker/Dockerfile_310
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.10
           push_image: ${{ github.event.inputs.push_image == 'true' }}
@@ -140,7 +140,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_311
+          docker_file: docker/Dockerfile_311
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.11
           push_image: ${{ github.event.inputs.push_image == 'true' }}
@@ -160,7 +160,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          dockerfile: docker/Dockerfile_docs
+          docker_file: docker/Dockerfile_docs
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:docs
           push_image: true
