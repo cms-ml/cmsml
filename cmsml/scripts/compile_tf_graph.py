@@ -160,7 +160,7 @@ def aot_compile(
         if tf_xla_flags_orig:
             tf_xla_flags = [tf_xla_flags_orig.rstrip(",")] + tf_xla_flags
         env["TF_XLA_FLAGS"] = ",".join(map(str, tf_xla_flags))
-    
+
     # prepare additional flags
     additional_flags_str = " ".join(make_list(additional_flags)) if additional_flags else ""
 
