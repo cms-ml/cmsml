@@ -59,9 +59,9 @@ class TensorFlowTestCase(CMSMLTestCase):
         model = tf.keras.Sequential()
 
         model.add(tf.keras.layers.InputLayer(input_shape=(10,), dtype=tf.float32, name="input"))
-        model.add(tf.keras.layers.BatchNormalization(axis=1, renorm=True))
+        model.add(tf.keras.layers.BatchNormalization(axis=1))
         model.add(tf.keras.layers.Dense(100, activation="tanh"))
-        model.add(tf.keras.layers.BatchNormalization(axis=1, renorm=True))
+        model.add(tf.keras.layers.BatchNormalization(axis=1))
         model.add(tf.keras.layers.Dense(3, activation="softmax", name="output"))
 
         return model
