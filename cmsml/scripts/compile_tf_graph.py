@@ -153,13 +153,13 @@ def aot_compile(
         xla_flags_orig = env.get("XLA_FLAGS", "")
         if xla_flags_orig:
             xla_flags = [xla_flags_orig.rstrip(",")] + xla_flags
-        env["XLA_FLAGS"] = ",".join(map(str, xla_flags))
+        env["XLA_FLAGS"] = " ".join(map(str, xla_flags))
     if tf_xla_flags:
         tf_xla_flags = make_list(tf_xla_flags)
         tf_xla_flags_orig = env.get("TF_XLA_FLAGS", "")
         if tf_xla_flags_orig:
             tf_xla_flags = [tf_xla_flags_orig.rstrip(",")] + tf_xla_flags
-        env["TF_XLA_FLAGS"] = ",".join(map(str, tf_xla_flags))
+        env["TF_XLA_FLAGS"] = " ".join(map(str, tf_xla_flags))
 
     # prepare additional flags
     additional_flags_str = " ".join(make_list(additional_flags)) if additional_flags else ""
