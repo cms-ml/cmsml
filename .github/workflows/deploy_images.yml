@@ -19,6 +19,7 @@ on:
           - py39
           - py310
           - py311
+          - py311-cuda
           - example
 
       platforms:
@@ -143,6 +144,25 @@ jobs:
           docker_file: docker/Dockerfile_311
           platforms: ${{ github.event.inputs.platforms }}
           tags: cmsml/cmsml:3.11
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
+
+  py311-cuda:
+    if: ${{ github.event.inputs.specific_job == 'none' || contains(github.event.inputs.specific_job, 'py311-cuda') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: ./.github/actions/build-image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_311_cuda
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.11-cuda
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   docs:
