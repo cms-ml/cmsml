@@ -142,7 +142,7 @@ jobs:
           path: docker
           dockerfile: docker/Dockerfile_311_cuda
           repository: cmsml/cmsml
-          tags: "3.11"
+          tags: "3.11-cuda"
           push: ${{ github.event.inputs.skip_push != 'true' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
