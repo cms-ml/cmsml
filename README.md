@@ -53,6 +53,15 @@ Click [here](https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&templa
 
 To use the cmsml package via docker, checkout our [DockerHub](https://hub.docker.com/repository/docker/cmsml/cmsml) which contains tags for several Python versions.
 
+| Image                   | Python version |    TF Version    | GPU support |
+| :---------------------- | :------------: | :--------------: | :---------: |
+| `cmsml/cmsml:3.7`       |      3.7       |      2.11.1      |     ✘      |
+| `cmsml/cmsml:3.8`       |      3.8       |      2.13.1      |     ✘      |
+| `cmsml/cmsml:3.9`       |      3.9       | latest (~2.16.1) |     ✘      |
+| `cmsml/cmsml:3.10`      |      3.10      | latest (~2.16.1) |     ✘      |
+| `cmsml/cmsml:3.11`      |      3.11      | latest (~2.16.1) |     ✘      |
+| `cmsml/cmsml:3.11-cuda` |      3.11      | latest (~2.16.1) |     ✔︎      |
+
 <!-- marker-after-docker -->
 
 <!-- marker-before-testing -->
