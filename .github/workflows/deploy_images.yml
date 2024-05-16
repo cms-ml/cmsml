@@ -161,7 +161,8 @@ jobs:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
           docker_file: docker/Dockerfile_311_cuda
-          platforms: ${{ github.event.inputs.platforms }}
+          # gpu / cuda only available on x86, not on arm
+          platforms: linux/amd64
           tags: cmsml/cmsml:3.11-cuda
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
