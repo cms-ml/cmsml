@@ -58,7 +58,12 @@ class TensorFlowTestCase(CMSMLTestCase):
     def create_keras_model(self, tf):
         model = tf.keras.Sequential()
 
-        model.add(tf.keras.layers.InputLayer(input_shape=(10,), dtype=tf.float32, name="input"))
+        # input_shape is deprected since TF 2.16
+        ge_2_16 = cmsml.tensorflow.tf_version_check(">=", (2, 16))
+        input_kwargs = {"dtype": tf.float32, "name": "input"}
+        input_kwargs["shape" if ge_2_16 else "input_shape"] = (10,)
+
+        model.add(tf.keras.layers.InputLayer(**input_kwargs))
         model.add(tf.keras.layers.BatchNormalization(axis=1))
         model.add(tf.keras.layers.Dense(100, activation="tanh"))
         model.add(tf.keras.layers.BatchNormalization(axis=1))
@@ -249,13 +254,14 @@ class TensorFlowTestCase(CMSMLTestCase):
             cmsml.tensorflow.save_frozen_graph(path, model, variables_to_constants=True)
             self.assertTrue(os.path.exists(path))
 
-        with tmp_file(suffix=".pb") as path:
-            cmsml.tensorflow.save_frozen_graph(
-                path,
-                self.tf1.keras.backend.get_session(),
-                variables_to_constants=False,
-            )
-            self.assertTrue(os.path.exists(path))
+        if cmsml.tensorflow.tf_keras_version_check("<", 3):
+            with tmp_file(suffix=".pb") as path:
+                cmsml.tensorflow.save_frozen_graph(
+                    path,
+                    self.tf1.keras.backend.get_session(),
+                    variables_to_constants=False,
+                )
+                self.assertTrue(os.path.exists(path))
 
     def test_save_keras_model_v2(self):
         model = self.create_keras_model(self.tf)
@@ -339,9 +345,19 @@ class TensorFlowTestCase(CMSMLTestCase):
 
         model = self.create_keras_model(self.tf)
 
-        with tmp_dir(create=False) as keras_path, tmp_dir(create=False) as tf_path:
+        # keras 3 requires a file ending in .keras
+        if cmsml.tensorflow.tf_keras_version_check(">=", 3):
+            tmp_keras = lambda: tmp_file(create=False, suffix=".keras")
+        else:
+            tmp_keras = lambda: tmp_dir(create=False)
+
+        with tmp_keras() as keras_path, tmp_dir(create=False) as tf_path:
             self.tf.saved_model.save(model, tf_path)
-            model.save(keras_path, overwrite=True, include_optimizer=False)
+
+            keras_kwargs = {"overwrite": True}
+            if cmsml.tensorflow.tf_version_check("<=", (2, 11)):
+                keras_kwargs["include_optimizer"] = False
+            model.save(keras_path, **keras_kwargs)
 
             yield keras_path, tf_path
 
@@ -351,8 +367,13 @@ class TensorFlowTestCase(CMSMLTestCase):
             keras_model = cmsml.tensorflow.load_model(keras_path)
             tf_model = cmsml.tensorflow.load_model(tf_path)
 
+            if cmsml.tensorflow.tf_version_check(">=", (2, 16)):
+                tf_func = lambda inp: tf_model.signatures["serving_default"](inp)["output_0"]
+            else:
+                tf_func = tf_model
+
             inp = self.tf.ones(shape=(2, 10))
-            keras_out, tf_out = keras_model(inp), tf_model(inp)
+            keras_out, tf_out = keras_model(inp), tf_func(inp)
 
             expected_shape = self.tf.TensorShape([2, 3])
 
@@ -363,8 +384,9 @@ class TensorFlowTestCase(CMSMLTestCase):
         with self.create_saved_model() as paths:
             keras_path, tf_path = paths
             default_serving_key = self.tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY
-            tf_graph_def = cmsml.tensorflow.load_graph_def(tf_path, default_serving_key)
-            keras_graph_def = cmsml.tensorflow.load_graph_def(keras_path, default_serving_key)
 
+            tf_graph_def = cmsml.tensorflow.load_graph_def(tf_path, default_serving_key)
             self.assertTrue(isinstance(tf_graph_def, self.tf.compat.v1.GraphDef))
+
+            keras_graph_def = cmsml.tensorflow.load_graph_def(keras_path, default_serving_key)
             self.assertTrue(isinstance(keras_graph_def, self.tf.compat.v1.GraphDef))

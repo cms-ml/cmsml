@@ -14,7 +14,7 @@ from types import ModuleType
 from typing import Any
 from tensorflow.core.framework.graph_pb2 import GraphDef
 
-from cmsml.util import MockModule
+from cmsml.util import MockModule, _op_map
 
 
 tf = MockModule("tensorflow")
@@ -69,6 +69,59 @@ def import_tf(
         tf1 = tf.compat.v1
 
     return tf, tf1, tf_version
+
+
+def tf_version_check(op: str, version: int | tuple[int, ...]) -> bool:
+    """
+    Compares the installed TensorFlow version with *version* using an operator *op*, which should be
+    any of ``"=="``, ``"!="``, ``"<"``, ``"<="``, ``">"`` or ``">="``. Examples:
+
+    .. code-block:: python
+
+        # actual version is 2.16
+        tf_version_check("==", (2, 16))  # -> True
+        tf_version_check(">", (2, 15))   # -> True
+        tf_version_check("!=", (2, 16))  # -> False
+    """
+    if op not in _op_map:
+        raise ValueError(f"unsupported operator '{op}'")
+    if not isinstance(version, tuple):
+        version = (version,)
+    if len(version) > 3:
+        raise ValueError("version must be at most a 3-tuple")
+    # get the tf version
+    tf_version = import_tf()[2][:len(version)]
+    # comparison
+    return _op_map[op](tf_version, version)
+
+
+def tf_keras_version_check(op: str, version: int | tuple[int, ...]) -> bool:
+    """
+    Compares the installed Keras version shipped with TensorFlow with *version* using an operator
+    *op*, which should be any of ``"=="``, ``"!="``, ``"<"``, ``"<="``, ``">"`` or ``">="``.
+    Examples:
+
+    .. code-block:: python
+
+        # actual version is 3.3
+        keras_version_check("==", (3, 3))  # -> True
+        keras_version_check(">", (3, 2))   # -> True
+        keras_version_check("!=", (3, 3))  # -> False
+    """
+    if op not in _op_map:
+        raise ValueError(f"unsupported operator '{op}'")
+    if not isinstance(version, tuple):
+        version = (version,)
+    if len(version) > 3:
+        raise ValueError("version must be at most a 3-tuple")
+    # get the keras version, which is tf version dependent
+    if tf_version_check(">=", (2, 16)):
+        keras_version = tuple(map(int, import_tf()[0].keras.__version__.split(".", 2)))
+    else:
+        import keras
+        keras_version = tuple(map(int, keras.__version__.split(".", 2)))
+    # comparison
+    return _op_map[op](keras_version, version)
 
 
 def save_graph(
@@ -138,16 +191,20 @@ def save_frozen_graph(
         from tensorflow.python.eager.function import ConcreteFunction
 
         if isinstance(obj, tf.keras.Model):
-            learning_phase_orig = tf.keras.backend.get_value(tf.keras.backend.learning_phase())
-            tf.keras.backend.set_learning_phase(False)
-            model_func = saving_utils.trace_model_call(obj)
-            if model_func.function_spec.arg_names and not model_func.input_signature:
-                raise ValueError(
-                    "when obj is a keras model callable accepting arguments, its "
-                    "input signature must be frozen by building the model",
-                )
-            obj = model_func.get_concrete_function()
-            tf.keras.backend.set_learning_phase(learning_phase_orig)
+            if tf_keras_version_check(">=", 3):
+                obj = obj._default_save_signature.get_concrete_function()
+            else:
+                # set the learning phase to False for the duration of the export for keras <= 3
+                learning_phase_orig = tf.keras.backend.get_value(tf.keras.backend.learning_phase())
+                tf.keras.backend.set_learning_phase(False)
+                model_func = saving_utils.trace_model_call(obj)
+                if model_func.function_spec.arg_names and not model_func.input_signature:
+                    raise ValueError(
+                        "when obj is a keras model callable accepting arguments, its "
+                        "input signature must be frozen by building the model",
+                    )
+                obj = model_func.get_concrete_function()
+                tf.keras.backend.set_learning_phase(learning_phase_orig)
 
         elif isinstance(obj, Function):
             if obj.function_spec.arg_names and not obj.input_signature:
@@ -295,8 +352,8 @@ def load_graph_def(
     serving_key: str = tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY,
 ) -> GraphDef:
     """
-    Loads the model saved at *model_path* and returns the GraphDef of it. Supported input types are tensorflow and keras
-    SavedModels, as well as frozen graphs.
+    Loads the model saved at *model_path* and returns the GraphDef of it. Supported input types are
+    tensorflow and keras SavedModels, as well as frozen graphs.
     """
     tf, tf1, tf_version = import_tf()
 
@@ -304,8 +361,6 @@ def load_graph_def(
 
     # if model_path is directory try load as saved model
     if os.path.isdir(model_path) and tf.saved_model.contains_saved_model(model_path):
-        # if keras model try to load as keras model
-        # else load as tensorflow saved model
         loaded_saved_model = load_model(model_path)
 
         # extract graph
@@ -325,6 +380,17 @@ def load_graph_def(
 
         return graph_def
 
+    # load from new keras model interface
+    if (
+        tf_keras_version_check(">=", 3) and
+        os.path.isfile(model_path) and
+        model_path.endswith((".keras", ".h5"))
+    ):
+        loaded_keras_model = load_model(model_path)
+        # TODO: no interace yet to choose the serving key
+        concrete_function = loaded_keras_model._default_save_signature.get_concrete_function()
+        return concrete_function.graph.as_graph_def()
+
     raise FileNotFoundError(f"{model_path} contains neither frozen graph nor SavedModel")
 
 
@@ -337,7 +403,15 @@ def load_model(model_path: str) -> tf.Model:
 
     model_path = os.path.expandvars(os.path.expanduser(str(model_path)))
 
-    if os.path.isdir(model_path) and os.path.exists(os.path.join(model_path, "keras_metadata.pb")):
+    if (
+        (
+            os.path.isdir(model_path) and
+            os.path.exists(os.path.join(model_path, "keras_metadata.pb"))
+        ) or (
+            os.path.isfile(model_path) and
+            model_path.endswith((".keras", ".h5"))
+        )
+    ):
         model = tf.keras.models.load_model(model_path)
     else:
         model = tf.saved_model.load(model_path)
@@ -359,7 +433,6 @@ def write_graph_summary(
     .. note::
         When used with TensorFlow v1, eager mode must be disabled.
     """
-
     # prepare the summary dir
     if not os.path.exists(summary_dir):
         os.makedirs(summary_dir)

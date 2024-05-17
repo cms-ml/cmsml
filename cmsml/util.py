@@ -16,6 +16,7 @@ import shutil
 import tempfile
 import contextlib
 import subprocess
+import operator
 import signal
 import importlib
 import six
@@ -32,6 +33,15 @@ lazy_iter_types = (
     map,
     enumerate,
 )
+
+_op_map = {
+    "==": operator.eq,
+    "!=": operator.ne,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+}
 
 
 def is_lazy_iterable(obj: Any) -> bool:
