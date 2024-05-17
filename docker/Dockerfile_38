@@ -5,7 +5,7 @@ WORKDIR /root
 
 # minimal software stack
 RUN apt-get update; apt-get clean
-RUN apt-get install -y nano less htop git; apt-get clean
+RUN apt-get install -y nano less htop git libhdf5-serial-dev; apt-get clean
 
 # python software stack
 RUN pip install --no-cache-dir --upgrade pip setuptools

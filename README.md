@@ -40,7 +40,7 @@ The documentation of this Python package is hosted on [readthedocs](http://cmsml
 **However**, note that this documentation only covers the API and technical aspects of the package itself.
 Usage examples and further techniques for working with machine learning tools in CMS, alongside a collection of useful guidelines can be found in the [general CMS ML group documentation](https://cms-ml.github.io/documentation).
 
-Click [here](https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md&) to submit a feature suggestion!
+Click [here](https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&template=feature-suggestion.md) to submit a feature suggestion!
 
 
 <!-- marker-after-header -->
@@ -53,14 +53,14 @@ Click [here](https://github.com/cms-ml/cmsml/issues/new?labels=suggestion&templa
 
 To use the cmsml package via docker, checkout our [DockerHub](https://hub.docker.com/repository/docker/cmsml/cmsml) which contains tags for several Python versions.
 
-| Image                   | Python version |    TF Version    | GPU support |
-| :---------------------- | :------------: | :--------------: | :---------: |
-| `cmsml/cmsml:3.7`       |      3.7       |      2.11.1      |     ✘      |
-| `cmsml/cmsml:3.8`       |      3.8       |      2.13.1      |     ✘      |
-| `cmsml/cmsml:3.9`       |      3.9       | latest (~2.16.1) |     ✘      |
-| `cmsml/cmsml:3.10`      |      3.10      | latest (~2.16.1) |     ✘      |
-| `cmsml/cmsml:3.11`      |      3.11      | latest (~2.16.1) |     ✘      |
-| `cmsml/cmsml:3.11-cuda` |      3.11      | latest (~2.16.1) |     ✔︎      |
+| Image                                                        | Python version |    TF Version    | PyTorch Version | GPU support |
+| :----------------------------------------------------------- | :------------: | :--------------: | :-------------: | :---------: |
+| `cmsml/cmsml:3.7`                                            |      3.7       |      2.11.1      |     1.13.1      |      ✘      |
+| `cmsml/cmsml:3.8`                                            |      3.8       |      2.13.1      | latest (~2.3.0) |      ✘      |
+| `cmsml/cmsml:3.9`<br>`cmsml/cmsml:3`<br>`cmsml/cmsml:latest` |      3.9       | latest (~2.16.1) | latest (~2.3.0) |      ✘      |
+| `cmsml/cmsml:3.10`                                           |      3.10      | latest (~2.16.1) | latest (~2.3.0) |      ✘      |
+| `cmsml/cmsml:3.11`                                           |      3.11      | latest (~2.16.1) | latest (~2.3.0) |      ✘      |
+| `cmsml/cmsml:3.11-cuda`                                      |      3.11      | latest (~2.16.1) | latest (~2.3.0) |      ✔︎      |
 
 <!-- marker-after-docker -->
 
