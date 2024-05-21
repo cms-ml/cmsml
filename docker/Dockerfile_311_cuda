@@ -5,26 +5,26 @@ WORKDIR /root
 
 # minimal software stack
 RUN apt-get update; apt-get clean
-RUN apt-get install -y nano less htop git; apt-get clean
+RUN apt-get install -y nano less htop git libhdf5-serial-dev; apt-get clean
 
 # python software stack
-RUN pip install --no-cache-dir --upgrade pip setuptools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir --upgrade ipython
-RUN pip install --no-cache-dir \
-    numpy \
-    scipy \
-    matplotlib \
-    pandas \
-    numexpr \
-    jupyterlab \
-    notebook \
-    scikit-learn \
-    scikit-optimize \
-    xgboost \
-    scinum \
-    nvidia_smi \
-    py3nvml \  
-    torch
+RUN pip install --no-cache-dir numpy
+RUN pip install --no-cache-dir scipy
+RUN pip install --no-cache-dir matplotlib
+RUN pip install --no-cache-dir pandas
+RUN pip install --no-cache-dir numexpr
+RUN pip install --no-cache-dir jupyterlab
+RUN pip install --no-cache-dir notebook
+RUN pip install --no-cache-dir scikit-learn
+RUN pip install --no-cache-dir scikit-optimize
+RUN pip install --no-cache-dir tensorflow
+RUN pip install --no-cache-dir xgboost
+RUN pip install --no-cache-dir scinum
+RUN pip install --no-cache-dir nvidia_smi
+RUN pip install --no-cache-dir py3nvml
+RUN pip install --no-cache-dir torch
 
 # install cmsml from master
 RUN git clone https://github.com/cms-ml/cmsml.git && \

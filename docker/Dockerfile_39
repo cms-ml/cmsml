@@ -8,7 +8,7 @@ RUN apt-get update; apt-get clean
 RUN apt-get install -y nano less htop git libhdf5-serial-dev; apt-get clean
 
 # python software stack
-RUN pip install --no-cache-dir --upgrade pip setuptools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir --upgrade ipython
 RUN pip install --no-cache-dir numpy
 RUN pip install --no-cache-dir scipy
