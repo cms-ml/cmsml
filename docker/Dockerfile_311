@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir torch
 # install cmsml from master
 RUN git clone https://github.com/cms-ml/cmsml.git && \
     cd cmsml && \
-    pip install --no-cache-dir .[dev] && \
+    pip install --no-cache-dir --upgrade .[dev] && \
     cd .. && \
     rm -rf cmsml
 
