@@ -26,12 +26,9 @@ RUN pip install --no-cache-dir nvidia_smi
 RUN pip install --no-cache-dir py3nvml
 RUN pip install --no-cache-dir torch
 
-# install cmsml from master
-RUN git clone https://github.com/cms-ml/cmsml.git && \
-    cd cmsml && \
-    pip install --no-cache-dir --upgrade .[dev] && \
-    cd .. && \
-    rm -rf cmsml
+# copy and install
+COPY . /cmsml
+RUN pip install --no-cache-dir --upgrade /cmsml[dev] && rm -rf /cmsml
 
 # initial command
 CMD ["bash", "-i", "-l"]
