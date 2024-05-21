@@ -19,3 +19,4 @@ build
 tmp
 docs/_build
 .ipynb_checkpoints
+.python-version

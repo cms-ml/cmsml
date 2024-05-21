@@ -3,167 +3,185 @@ name: Deploy images
 on:
   workflow_dispatch:
     inputs:
-      skip_push:
-        description: Skip pushing images? (true|false)
-        required: false
-        default: 'false'
-      skip_docs:
-        description: Skip the docs image? (true|false)
-        required: false
-        default: 'false'
+      push_image:
+        description: Push to DockerHub
+        type: boolean
+        default: false
+
+      specific_job:
+        description: Specific job to run
+        type: choice
+        default: all
+        options:
+          - all
+          - py37
+          - py38
+          - py39
+          - py310
+          - py311
+          - py311-cuda
+          - example
+
+      platforms:
+        description: Platforms to build for
+        type: choice
+        default: linux/amd64,linux/arm64
+        options:
+          - linux/amd64,linux/arm64
+          - linux/amd64
+          - linux/arm64
 
 jobs:
   py37:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py37') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_37
-          repository: cmsml/cmsml
-          tags: "3.7"
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_37
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.7
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py38:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py38') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_38
-          repository: cmsml/cmsml
-          tags: "3.8"
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_38
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.8
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py39:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_39
-          repository: cmsml/cmsml
-          tags: 3.9,3,latest
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_39
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.9,cmsml/cmsml:3,cmsml/cmsml:latest
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py39_base:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') }}
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.skip_push != 'true' }}
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_39_base
-          repository: cmsml/cmsml
-          tags: 3.9_base
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_39_base
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.9_base
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py310:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py310') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_310
-          repository: cmsml/cmsml
-          tags: "3.10"
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_310
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.10
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py311:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py311') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_311
-          repository: cmsml/cmsml
-          tags: "3.11"
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_311
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.11
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
+
   py311-cuda:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py311-cuda') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_311_cuda
-          repository: cmsml/cmsml
-          tags: "3.11-cuda"
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_311_cuda
+          # gpu / cuda only available on x86, not on arm
+          platforms: linux/amd64
+          tags: cmsml/cmsml:3.11-cuda
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
+
   docs:
+    if: ${{ github.event.inputs.push_image == 'true' && (github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'example')) }}
     needs: py39
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.skip_docs != 'true' && github.event.inputs.skip_push != 'true' }}
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Build and deploy image 🐳
-        uses: docker/build-push-action@v1
+        uses: ./.github/actions/build-image
         with:
-          path: docker
-          dockerfile: docker/Dockerfile_docs
-          repository: cmsml/cmsml
-          tags: docs
-          push: ${{ github.event.inputs.skip_push != 'true' }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_docs
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:docs
+          push_image: true

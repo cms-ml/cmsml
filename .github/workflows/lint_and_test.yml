@@ -37,6 +37,7 @@ jobs:
           - {tag: "3.9_base", tf: "2.11.1"}
           - {tag: "3.9_base", tf: "2.12.1"}
           - {tag: "3.9_base", tf: "2.13.0"}
+          - {tag: "3.9_base", tf: "2.16.1"}
     name: test (image=${{ matrix.versions.tag }}, tf=${{ matrix.versions.tf }})
     steps:
       - name: Checkout 🛎️

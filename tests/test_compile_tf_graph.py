@@ -38,11 +38,11 @@ class TfCompileTestCase(CMSMLTestCase):
 
     def create_test_model(self, tf):
         # model with 2 input nodes and 1 output node, with non-static batchsize
-        x1 = tf.keras.Input(shape=(2,), name="first")
-        x2 = tf.keras.Input(shape=(3,), name="second")
-        x3 = tf.keras.Input(shape=(10,), name="third")
+        x1 = tf.keras.Input(shape=(2,), name="inputs")
+        x2 = tf.keras.Input(shape=(3,), name="inputs_1")
+        x3 = tf.keras.Input(shape=(10,), name="inputs_2")
 
-        x = tf.concat([x1, x2], axis=1)
+        x = tf.keras.layers.concatenate([x1, x2], axis=1)
         a1 = tf.keras.layers.Dense(10, activation="elu")(x)
         y = tf.keras.layers.Dense(5, activation="softmax")(a1)
 
@@ -93,20 +93,20 @@ class TfCompileTestCase(CMSMLTestCase):
             model_static_inputs = loaded_static_model.signatures[key].structured_input_signature[1]
 
             expected_model_static_inputs = {
-                f"first_bs{batch_size}": tf.TensorSpec(
+                f"inputs_bs{batch_size}": tf.TensorSpec(
                     shape=(batch_size, 2),
                     dtype=tf.float32,
-                    name=f"first_bs{batch_size}",
+                    name=f"inputs_bs{batch_size}",
                 ),
-                f"second_bs{batch_size}": tf.TensorSpec(
+                f"inputs_1_bs{batch_size}": tf.TensorSpec(
                     shape=(batch_size, 3),
                     dtype=tf.float32,
-                    name=f"second_bs{batch_size}",
+                    name=f"inputs_1_bs{batch_size}",
                 ),
-                f"third_bs{batch_size}": tf.TensorSpec(
+                f"inputs_2_bs{batch_size}": tf.TensorSpec(
                     shape=(batch_size, 10),
                     dtype=tf.float32,
-                    name=f"third_bs{batch_size}",
+                    name=f"inputs_2_bs{batch_size}",
                 ),
             }
 
