@@ -21,7 +21,7 @@ on:
           - py311
           - py311-cuda
           - py312
-          - example
+          - docs
 
       platforms:
         description: Platforms to build for
@@ -34,7 +34,7 @@ on:
 
 jobs:
   py37:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py37') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py37' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -53,7 +53,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py38:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py38') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py38' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -72,7 +72,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py39:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') || contains(github.event.inputs.specific_job, 'docs') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py39' || github.event.inputs.specific_job == 'docs' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -91,7 +91,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py39_base:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py39' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -110,7 +110,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py310:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py310') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py310' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -129,7 +129,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py311:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py311') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py311' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -148,7 +148,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py311-cuda:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py311-cuda') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py311-cuda' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -168,7 +168,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py312:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py312') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'py312' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -187,7 +187,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   docs:
-    if: ${{ github.event.inputs.push_image == 'true' && (github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'docs')) }}
+    if: ${{ github.event.inputs.push_image == 'true' && (github.event.inputs.specific_job == 'all' || github.event.inputs.specific_job == 'docs') }}
     needs: py39
     runs-on: ubuntu-latest
     steps:
