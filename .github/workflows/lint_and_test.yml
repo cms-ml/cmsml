@@ -31,6 +31,7 @@ jobs:
           - {tag: "3.9", tf: "default"}
           - {tag: "3.10", tf: "default"}
           - {tag: "3.11", tf: "default"}
+          - {tag: "3.12", tf: "default"}
           # scan tf versions
           - {tag: "3.9_base", tf: "2.5.3"}
           - {tag: "3.9_base", tf: "2.6.5"}

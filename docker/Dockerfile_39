@@ -8,7 +8,7 @@ RUN apt-get update; apt-get clean
 RUN apt-get install -y nano less htop git libhdf5-serial-dev; apt-get clean
 
 # python software stack
-RUN pip install --no-cache-dir --upgrade pip setuptools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir --upgrade ipython
 RUN pip install --no-cache-dir numpy
 RUN pip install --no-cache-dir scipy
@@ -26,12 +26,9 @@ RUN pip install --no-cache-dir nvidia_smi
 RUN pip install --no-cache-dir py3nvml
 RUN pip install --no-cache-dir torch
 
-# install cmsml from master
-RUN git clone https://github.com/cms-ml/cmsml.git && \
-    cd cmsml && \
-    pip install --no-cache-dir .[dev] && \
-    cd .. && \
-    rm -rf cmsml
+# copy and install
+COPY . /cmsml
+RUN pip install --no-cache-dir --upgrade /cmsml[dev] && rm -rf /cmsml
 
 # initial command
 CMD ["bash", "-i", "-l"]

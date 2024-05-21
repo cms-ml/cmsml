@@ -61,6 +61,7 @@ To use the cmsml package via docker, checkout our [DockerHub](https://hub.docker
 | `cmsml/cmsml:3.10`                                           |      3.10      | latest (~2.16.1) | latest (~2.3.0) |      ✘      |
 | `cmsml/cmsml:3.11`                                           |      3.11      | latest (~2.16.1) | latest (~2.3.0) |      ✘      |
 | `cmsml/cmsml:3.11-cuda`                                      |      3.11      | latest (~2.16.1) | latest (~2.3.0) |      ✔︎      |
+| `cmsml/cmsml:3.12`                                           |      3.12      | latest (~2.16.1) | latest (~2.3.0) |      ✘      |
 
 <!-- marker-after-docker -->
 
@@ -74,7 +75,7 @@ The tests can be triggered with
 pytest -n auto tests
 ```
 
-and in general, they should be run for Python 3.7 to 3.11.
+and in general, they should be run for Python 3.7 to 3.12.
 To run tests in a docker container, do
 
 ```shell
