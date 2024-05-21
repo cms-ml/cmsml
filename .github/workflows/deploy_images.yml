@@ -20,6 +20,7 @@ on:
           - py310
           - py311
           - py311-cuda
+          - py312
           - example
 
       platforms:
@@ -71,7 +72,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py39:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') || contains(github.event.inputs.specific_job, 'docs') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -166,8 +167,27 @@ jobs:
           tags: cmsml/cmsml:3.11-cuda
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
+  py312:
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py312') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Build and deploy image 🐳
+        uses: ./.github/actions/build-image
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          docker_file: docker/Dockerfile_312
+          platforms: ${{ github.event.inputs.platforms }}
+          tags: cmsml/cmsml:3.12
+          push_image: ${{ github.event.inputs.push_image == 'true' }}
+
   docs:
-    if: ${{ github.event.inputs.push_image == 'true' && (github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'example')) }}
+    if: ${{ github.event.inputs.push_image == 'true' && (github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'docs')) }}
     needs: py39
     runs-on: ubuntu-latest
     steps:
