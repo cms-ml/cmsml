@@ -71,7 +71,7 @@ def compile_tf_graph(
     for bs in sorted(set(map(int, batch_sizes))):
         # create a fully defined signature, filling leading None's in shapes with the batch size
         specs = {}
-        for key, spec in model.signatures["serving_default"].structured_input_signature[1].items():
+        for key, spec in model.signatures[input_serving_key].structured_input_signature[1].items():
             # ignore inputs without undefined axes
             if None not in spec.shape:
                 continue
