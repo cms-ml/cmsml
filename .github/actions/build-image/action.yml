@@ -41,7 +41,7 @@ runs:
     - name: Build and deploy image 🐳
       uses: docker/build-push-action@v5
       with:
-        context: docker
+        context: .
         file: ${{ inputs.docker_file }}
         platforms: ${{ inputs.platforms }}
         push: ${{ inputs.push_image }}
