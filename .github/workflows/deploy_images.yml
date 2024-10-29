@@ -17,6 +17,7 @@ on:
           - py37
           - py38
           - py39
+          - py39_base
           - py310
           - py311
           - py311-cuda
@@ -90,7 +91,7 @@ jobs:
           push_image: ${{ github.event.inputs.push_image == 'true' }}
 
   py39_base:
-    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39') }}
+    if: ${{ github.event.inputs.specific_job == 'all' || contains(github.event.inputs.specific_job, 'py39_base') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️

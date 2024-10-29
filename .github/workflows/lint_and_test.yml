@@ -34,10 +34,10 @@ jobs:
           # scan tf versions
           - {tag: "3.9_base", tf: "2.5.3"}
           - {tag: "3.9_base", tf: "2.6.5"}
-          - {tag: "3.9_base", tf: "2.11.1"}
           - {tag: "3.9_base", tf: "2.12.1"}
           - {tag: "3.9_base", tf: "2.13.0"}
           - {tag: "3.9_base", tf: "2.16.1"}
+          - {tag: "3.9_base", tf: "2.18.0"}
     name: test (image=${{ matrix.versions.tag }}, tf=${{ matrix.versions.tf }})
     steps:
       - name: Checkout 🛎️
