@@ -62,7 +62,7 @@ class TfCompileTestCase(CMSMLTestCase):
                 tf.TensorSpec(shape=(None, 2), dtype=tf.float32, name="inputs"),
                 tf.TensorSpec(shape=(None, 3), dtype=tf.float32, name="inputs_1"),
                 tf.TensorSpec(shape=(None, 10), dtype=tf.float32, name="inputs_2"),
-                ]
+            ]
 
             conc_func = tf.function(model.call).get_concrete_function(spec)
             signatures = {
@@ -97,7 +97,6 @@ class TfCompileTestCase(CMSMLTestCase):
                 )
 
                 # load model
-                breakpoint(header='')
                 loaded_static_model = cmsml.tensorflow.load_model(static_saved_model_path)
 
                 # check input shape
