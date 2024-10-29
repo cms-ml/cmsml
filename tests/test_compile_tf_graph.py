@@ -67,7 +67,7 @@ class TfCompileTestCase(CMSMLTestCase):
             conc_func = tf.function(model.call).get_concrete_function(spec)
             signatures = {
                 tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY: conc_func,
-                "custom_signature":conc_func,
+                "custom_signature": conc_func,
             }
 
             tf.saved_model.save(model, model_path, signatures=signatures)
